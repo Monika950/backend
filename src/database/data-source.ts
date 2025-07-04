@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource({
   database: 'stamsoft',
   synchronize: true, //false
   logging: false,
-  entities: [User],
+  //entities: [User],
   migrations: [],
   subscribers: [],
 });
