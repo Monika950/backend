@@ -1,4 +1,3 @@
-version: '0.0.1'
 services:
   postgre:
     image: postgres:17
@@ -21,7 +20,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    
+
 volumes:
   postgre:
     driver: local
+
+networks:
+  backend:
+    driver: bridge

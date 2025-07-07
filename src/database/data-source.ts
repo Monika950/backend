@@ -1,17 +1,20 @@
-import 'reflect-metadata';
+import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
-import { User } from '../modules/user/entities/user.entity';
 
-export const AppDataSource = new DataSource({
+dotenv.config();
+
+const connectDB = new DataSource({
   type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  username: 'postgres',
-  password: 'password',
-  database: 'stamsoft',
-  synchronize: true, //false
-  logging: false,
-  //entities: [User],
-  migrations: [],
-  subscribers: [],
+  logging: process.env.DATABASE_LOGGING === 'true',
+  synchronize: false,
+  migrationsTableName: 'migrations',
+  host: process.env.DATABASE_HOST,
+  port: +process.env.DATABASE_PORT,
+  database: process.env.DATABASE_NAME,
+  username: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
+  migrations: [__dirname + '/../migrations/*.ts'],
+  entities: [__dirname + '/../**/entities/*.entity{.ts,.js}'],
 });
+
+export default connectDB;
