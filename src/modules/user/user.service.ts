@@ -53,11 +53,26 @@ export class UserService {
   async findOneOrFailByUsername(username: string) {
     const user = await this.findOneByUsername(username);
     if (!user) {
-      throw new NotFoundException(`User with ID ${username} not found`);
+      throw new NotFoundException(`User with username ${username} not found`);
     }
     return user;
   }
 
+  async findOneByEmail(email: string) {
+    return await this.usersRepository.findOne({
+      where: {
+        email,
+      },
+    });
+  }
+
+  async findOneOrFailByEmail(email: string) {
+    const user = await this.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    return user;
+  }
   async update(id: string, updateUserDto: UpdateUserDto) {
     if (updateUserDto.username) {
       const userWithSameUsername = await this.findOneByUsername(
