@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -38,14 +42,42 @@ export class UserService {
     return user;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    if (updateUserDto.username) {
-     
-      }
-    return `This action updates a #${id} user`;
+  async findOneByUsername(username: string) {
+    return await this.usersRepository.findOne({
+      where: {
+        username,
+      },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findOneOrFailByUsername(username: string) {
+    const user = await this.findOneByUsername(username);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${username} not found`);
+    }
+    return user;
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    if (updateUserDto.username) {
+      const userWithSameUsername = await this.findOneByUsername(
+        updateUserDto.username,
+      );
+      if (userWithSameUsername && userWithSameUsername.id !== id) {
+        throw new ConflictException('Username already exists');
+      }
+    }
+    const user = await this.findOne(id);
+    user.firstName = updateUserDto.firstName;
+    user.lastName = updateUserDto.lastName;
+    user.username = updateUserDto.username;
+    user.password = updateUserDto.password;
+
+    await this.usersRepository.save(user);
+    return user;
+  }
+
+  async remove(id: string) {
+    return this.usersRepository.delete(id);
   }
 }
