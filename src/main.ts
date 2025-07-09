@@ -1,15 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { AppDataSource } from './data-source';
+import 'dotenv/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { abortOnError: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    abortOnError: false,
+  });
+  app.useGlobalPipes(new ValidationPipe());
   await app.listen(process.env.PORT ?? 3000);
-
-  AppDataSource.initialize()
-    .then(() => {
-      // here you can start to work with your database
-    })
-    .catch((error) => console.log(error));
 }
 bootstrap();
