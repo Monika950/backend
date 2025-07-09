@@ -78,6 +78,6 @@ export class UserService {
   }
 
   async remove(id: string) {
-    return this.usersRepository.delete(id);
+    await this.usersRepository.delete(id);
   }
 }
