@@ -25,6 +25,7 @@ export class AuthController {
   // @UseGuards(AuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return req.user;
   }
 }
