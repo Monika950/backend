@@ -7,7 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import * as dotenv from 'dotenv';
-import { JwtPayload } from './jwt-payload.interface';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 dotenv.config();
 
@@ -17,9 +17,8 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const authorization = request.headers.authorization;
-    const token = authorization?.split('')[1];
-
+    const token = this.extractTokenFromHeader(request);
+    console.log(token);
     if (!token) {
       throw new UnauthorizedException();
     }
@@ -27,7 +26,7 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret: process.env.JWT_SECRET,
       });
-      request['user'] = payload;//tuk si
+      request['user'] = payload;
     } catch {
       throw new UnauthorizedException();
     }
@@ -35,7 +34,8 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    const authorization = request.headers.authorization;
+    const [type, token] = authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 }
