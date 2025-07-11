@@ -6,6 +6,7 @@ import { UserModule } from './modules/user/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
+import { LocationModule } from './location/location.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module';
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     UserModule,
     AuthModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
