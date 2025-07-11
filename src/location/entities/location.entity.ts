@@ -18,6 +18,13 @@ export class Location {
   })
   id: string;
 
+  @IsUUID()
+  @ApiProperty({
+    description: 'Unique identifier',
+    example: 'de305d54-75b4-431b-adb2-eb6b9e546014',
+  })
+  treasureHuntId: string;
+
   @Column({ type: 'jsonb' })
   @IsNotEmpty()
   @IsObject()
