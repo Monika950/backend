@@ -6,6 +6,7 @@ import { UserModule } from './modules/user/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
+import { TreasureHuntModule } from './modules/treasure-hunt/treasure-hunt.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module';
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     UserModule,
     AuthModule,
+    TreasureHuntModule,
   ],
   controllers: [AppController],
   providers: [AppService],
