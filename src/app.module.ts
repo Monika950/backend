@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { TreasureHuntModule } from './modules/treasure-hunt/treasure-hunt.module';
+import { LocationModule } from './location/location.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TreasureHuntModule } from './modules/treasure-hunt/treasure-hunt.module
     UserModule,
     AuthModule,
     TreasureHuntModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
