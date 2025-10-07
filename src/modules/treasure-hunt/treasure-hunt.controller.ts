@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { TreasureHuntService } from './treasure-hunt.service';
 import { CreateTreasureHuntDto } from './dto/create-treasure-hunt.dto';
 import { UpdateTreasureHuntDto } from './dto/update-treasure-hunt.dto';
@@ -23,7 +31,10 @@ export class TreasureHuntController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTreasureHuntDto: UpdateTreasureHuntDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateTreasureHuntDto: UpdateTreasureHuntDto,
+  ) {
     return this.treasureHuntService.update(+id, updateTreasureHuntDto);
   }
 

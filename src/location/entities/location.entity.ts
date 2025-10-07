@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { IsString, IsNotEmpty, IsObject, IsUUID, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { TreasureHunt } from '../../modules/treasure-hunt/entities/treasure-hunt.entity';
 
 @Entity()
 export class Location {
@@ -18,6 +20,7 @@ export class Location {
   })
   id: string;
 
+  @ManyToOne(() => TreasureHunt, (treasureHunt) => treasureHunt.locations)
   @IsUUID()
   @ApiProperty({
     description: 'Unique identifier',
