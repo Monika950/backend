@@ -92,6 +92,13 @@ export class UserService {
     return user;
   }
 
+  async updateRefreshToken(
+    userId: string,
+    refreshToken: string | null,
+  ): Promise<void> {
+    await this.usersRepository.update(userId, { refreshToken });
+  }
+
   async remove(id: string) {
     await this.usersRepository.delete(id);
   }

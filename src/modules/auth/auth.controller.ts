@@ -27,4 +27,9 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return request.user;
   }
+
+  @Post('refresh')
+  async refresh(@Body() body: { userId: string; refreshToken: string }) {
+    return this.authService.refreshTokens(body.userId, body.refreshToken);
+  }
 }
