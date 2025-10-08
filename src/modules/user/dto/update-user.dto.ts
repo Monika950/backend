@@ -1,12 +1,12 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
-import { IsString, MinLength, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
+import { IsStrongPassword } from '../../../common/decorators/is-strong-password.decorator';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @IsString()
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
-  @IsNotEmpty({ message: 'Password is required' })
+  @IsStrongPassword()
   password?: string;
 
   @IsOptional()
