@@ -5,19 +5,25 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Location } from '../../../location/entities/location.entity';
+import { User } from '../../user/entities/user.entity';
+import { UserProgress } from '../../user-progress/entities/user-progress.entity';
 
 @Entity()
 export class TreasureHunt {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid', { array: true })
-  owners: string[];
+  @Column({ length: 100 })
+  name: string;
 
-  @Column('uuid', { array: true }) 
-  users: string[];
+  @Column({ type: 'text' })
+  description: string;
 
-  @Column('uuid', { array: true })
+  @OneToMany(() => User, (user) => user.treasureHunts)
+  user: User[];
+
+  @Column(Location, { array: true })
   locations: string[];
 
   @Column({ unique: true })
@@ -31,6 +37,9 @@ export class TreasureHunt {
 
   @Column()
   end: Date;
+
+  @OneToMany(() => UserProgress, (progress) => progress.treasureHunt)
+  progress: UserProgress[];
 
   @CreateDateColumn()
   createdAt: Date;

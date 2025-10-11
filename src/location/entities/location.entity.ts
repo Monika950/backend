@@ -2,11 +2,22 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { IsString, IsNotEmpty, IsObject, IsUUID, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsObject,
+  IsUUID,
+  IsUrl,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { TreasureHunt } from '../../modules/treasure-hunt/entities/treasure-hunt.entity';
+import { UserAnswer } from '../../modules/user-answer/entities/user-answer.entity';
 
 @Entity()
 export class Location {
@@ -70,6 +81,15 @@ export class Location {
     example: '/uploads/nevsky.jpg',
   })
   image: string;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  @Column({ type: 'int' })
+  order_index: number;
+
+  @OneToMany(() => UserAnswer, (answer) => answer.location)
+  answers: UserAnswer[];
 
   @CreateDateColumn()
   @ApiProperty({
