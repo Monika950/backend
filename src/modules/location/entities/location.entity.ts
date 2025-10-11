@@ -17,8 +17,8 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { TreasureHunt } from '../../modules/treasure-hunt/entities/treasure-hunt.entity';
-import { UserAnswer } from '../../modules/user-answer/entities/user-answer.entity';
+import { TreasureHunt } from '../../treasure-hunt/entities/treasure-hunt.entity';
+import { UserAnswer } from '../../user-answer/entities/user-answer.entity';
 
 @Entity()
 export class Location {
