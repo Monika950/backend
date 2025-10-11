@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Location } from '../../../location/entities/location.entity';
+import { Location } from '../../location/entities/location.entity';
 import { User } from '../../user/entities/user.entity';
 import { UserProgress } from '../../user-progress/entities/user-progress.entity';
 

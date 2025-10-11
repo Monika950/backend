@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   Unique,
 } from 'typeorm';
-import { Location } from '../../../location/entities/location.entity';
+import { Location } from '../../location/entities/location.entity';
 import { TreasureHunt } from '../../treasure-hunt/entities/treasure-hunt.entity';
 import { User } from '../../user/entities/user.entity';
 
