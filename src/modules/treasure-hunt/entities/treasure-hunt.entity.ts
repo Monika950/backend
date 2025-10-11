@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -23,8 +24,8 @@ export class TreasureHunt {
   @OneToMany(() => User, (user) => user.treasureHunts)
   user: User[];
 
-  @Column(Location, { array: true })
-  locations: string[];
+  @OneToMany(() => Location, (location) => location.treasureHuntId)
+  locations: Location[];
 
   @Column({ unique: true })
   code: string;
