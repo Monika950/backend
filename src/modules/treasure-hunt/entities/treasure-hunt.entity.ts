@@ -24,7 +24,7 @@ export class TreasureHunt {
   @OneToMany(() => User, (user) => user.treasureHunts)
   user: User[];
 
-  @OneToMany(() => Location, (location) => location.treasureHuntId)
+  @OneToMany(() => Location, (location) => location.treasureHunt)
   locations: Location[];
 
   @Column({ unique: true })

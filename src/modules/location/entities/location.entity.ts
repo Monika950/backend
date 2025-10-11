@@ -30,12 +30,13 @@ export class Location {
   })
   id: string;
 
+  @ManyToOne(() => TreasureHunt, (treasureHunt) => treasureHunt.locations)
   @IsUUID()
   @ApiProperty({
     description: 'Unique identifier',
     example: 'de305d54-75b4-431b-adb2-eb6b9e546014',
   })
-  treasureHuntId: string;
+  treasureHunt: TreasureHunt;
 
   @Column({ type: 'jsonb' })
   @IsNotEmpty()
