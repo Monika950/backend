@@ -6,10 +6,11 @@ import {
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { SignInDto } from './dto/sign-in.dto';
+import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { SafeUser } from './interfaces/safe-user.interface';
 import { AuthResponse } from './interfaces/auth-response.interface';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,9 +19,35 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(signInDto: SignInDto): Promise<SafeUser | null> {
-    const user = await this.userService.findOneByEmail(signInDto.email);
-    const isValid = user && (await user.comparePassword(signInDto.password));
+  async register(registerDto: RegisterDto) {
+    const user = await this.userService.create(registerDto);
+    return this.generateTokens(user);
+  }
+
+  private async generateTokens(
+    payload: JwtPayload,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        expiresIn: '15m',
+      }),
+      this.jwtService.signAsync(payload, {
+        expiresIn: '7d',
+        secret: process.env.JWT_REFRESH_SECRET,
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  async hashData(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
+  }
+
+  async validateUser(loginDto: LoginDto): Promise<SafeUser | null> {
+    const user = await this.userService.findOneByEmail(loginDto.email);
+    console.log(user.password, loginDto.password); //hashing
+    const isValid = user && (await user.comparePassword(loginDto.password));
 
     if (!isValid) {
       return null;
@@ -34,9 +61,9 @@ export class AuthService {
   }
 
   async authenticate(
-    signInDto: SignInDto,
+    loginDto: LoginDto,
   ): Promise<AuthResponse | UnauthorizedException> {
-    const user = await this.validateUser(signInDto);
+    const user = await this.validateUser(loginDto);
 
     if (!user) {
       throw new UnauthorizedException();
@@ -46,28 +73,16 @@ export class AuthService {
   }
 
   async signIn(user: SafeUser): Promise<AuthResponse> {
-    const payload: JwtPayload = {
-      sub: user.id,
-      username: user.username,
-      email: user.email,
-    };
+    const payload: JwtPayload = user;
 
-    const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        expiresIn: '15m',
-      }),
-      this.jwtService.signAsync(payload, {
-        expiresIn: '7d',
-        secret: process.env.JWT_REFRESH_SECRET,
-      }),
-    ]);
+    const { accessToken, refreshToken } = await this.generateTokens(payload);
 
-    const hashedRefreshToken = await bcrypt.hash(refresh_token, 10);
+    const hashedRefreshToken = await this.hashData(refreshToken);
     await this.userService.updateRefreshToken(user.id, hashedRefreshToken);
 
     return {
-      accessToken: access_token,
-      refreshToken: refresh_token,
+      accessToken,
+      refreshToken,
       ...user,
     };
   }

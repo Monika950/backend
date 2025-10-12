@@ -1,24 +1,21 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
-export class SignUpDto { //is it used anywhere?
+export class RegisterDto {
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty()
-  @IsEmail()
   email: string;
 
-  @IsNotEmpty()
   @IsString()
-  @MinLength(6)
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @IsNotEmpty({ message: 'Password is required' })
   password: string;
 
   @IsNotEmpty()
-  @IsString()
   username: string;
 
   @IsNotEmpty()
-  @IsString()
   firstName: string;
 
   @IsNotEmpty()
-  @IsString()
   lastName: string;
 }
