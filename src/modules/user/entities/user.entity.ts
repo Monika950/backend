@@ -35,7 +35,7 @@ export class User {
   updatedAt: Date;
 
   @Column({ nullable: true })
-  refreshToken?: string | null;
+  refreshToken: string | null;
 
   @BeforeInsert()
   async hashPassword() {

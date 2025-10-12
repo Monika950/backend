@@ -11,6 +11,7 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { SafeUser } from './interfaces/safe-user.interface';
 import { AuthResponse } from './interfaces/auth-response.interface';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -116,5 +117,65 @@ export class AuthService {
     };
 
     return this.signIn(safeUser);
+  }
+
+  async changePassword(id: string, oldPassword: string, newPassword: string) {
+    const user = await this.userService.findOne(id);
+    const isValid = user && (await user.comparePassword(oldPassword));
+
+    if (!isValid) {
+      new UnauthorizedException('Wrong credentials');
+    }
+
+    await this.userService.updatePassword(id, newPassword);
+
+    return { message: 'Password changed successfully' };
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userService.findOneByEmail(email);
+    if (!user) return;
+
+    const payload: JwtPayload = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    };
+    const token = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_RESET_SECRET,
+      expiresIn: '15m',
+    });
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`; //?
+
+    // send reset email
+    // await this.emailService.sendPasswordReset(user.email, resetLink);//implement
+  }
+
+  private async verifyResetToken(token: string): Promise<JwtPayload | null> {
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: process.env.JWT_RESET_SECRET,
+      });
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const payload = await this.verifyResetToken(token);
+    if (!payload) {
+      throw new ForbiddenException('Invalid or expired token');
+    }
+
+    const user = await this.userService.findOne(payload.id);
+    if (!user) throw new ForbiddenException('Invalid token');
+
+    await this.userService.updatePassword(user.id, newPassword);
+  }
+
+  async logout(id: string): Promise<void> {
+    await this.userService.updateRefreshToken(id, null);
   }
 }
