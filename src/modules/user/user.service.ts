@@ -15,7 +15,7 @@ export class UserService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
   ) {}
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const user = this.usersRepository.create(createUserDto);
     await this.usersRepository.save(user);
     return user;
@@ -86,17 +86,25 @@ export class UserService {
     user.firstName = updateUserDto.firstName;
     user.lastName = updateUserDto.lastName;
     user.username = updateUserDto.username;
-    user.password = updateUserDto.password;
+    //user.password = updateUserDto.password;
 
     await this.usersRepository.save(user);
     return user;
   }
 
+  async updatePassword(id: string, newPassword: string): Promise<void> {
+    await this.usersRepository.update(id, { password: newPassword });
+  }
+
   async updateRefreshToken(
-    userId: string,
+    id: string,
     refreshToken: string | null,
   ): Promise<void> {
-    await this.usersRepository.update(userId, { refreshToken });
+    await this.usersRepository.update(id, { refreshToken });
+  }
+
+  async clearRefreshToken(id: string): Promise<void> {
+    await this.usersRepository.update(id, { refreshToken: null });
   }
 
   async remove(id: string) {

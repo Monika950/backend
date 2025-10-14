@@ -40,7 +40,7 @@ export class User {
   updatedAt: Date;
 
   @Column({ nullable: true })
-  refreshToken?: string | null;
+  refreshToken: string | null;
 
   @OneToMany(() => TreasureHunt, (treasureHunt) => treasureHunt.user)
   treasureHunts: TreasureHunt[];
@@ -57,6 +57,12 @@ export class User {
   @BeforeInsert()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
+  }
+
+  @BeforeInsert()
+  async hashRefreshToken() {
+    if (!this.refreshToken) return;
+    this.refreshToken = await bcrypt.hash(this.refreshToken, 10);
   }
   async comparePassword(attempt: string): Promise<boolean> {
     return bcrypt.compare(attempt, this.password);

@@ -6,21 +6,59 @@ import {
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { SignInDto } from './dto/sign-in.dto';
+import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { SafeUser } from './interfaces/safe-user.interface';
 import { AuthResponse } from './interfaces/auth-response.interface';
+import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { MailService } from '../../services/mail.service';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
-  async validateUser(signInDto: SignInDto): Promise<SafeUser | null> {
-    const user = await this.userService.findOneByEmail(signInDto.email);
-    const isValid = user && (await user.comparePassword(signInDto.password));
+  async register(registerDto: RegisterDto) {
+    const user = await this.userService.create(registerDto);
+
+    return this.generateTokens({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+    });
+  }
+
+  private async generateTokens(
+    payload: JwtPayload,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        expiresIn: '15m',
+      }),
+      this.jwtService.signAsync(payload, {
+        expiresIn: '7d',
+        secret: process.env.JWT_REFRESH_SECRET,
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  async hashData(data: string): Promise<string> {
+    return bcrypt.hash(data, 10);
+  }
+
+  async validateUser(loginDto: LoginDto): Promise<SafeUser | null> {
+    const user = await this.userService.findOneByEmail(loginDto.email);
+
+    const isValid =
+      user && (await this.hashData(loginDto.password)) == user.password;
 
     if (!isValid) {
       return null;
@@ -34,9 +72,9 @@ export class AuthService {
   }
 
   async authenticate(
-    signInDto: SignInDto,
+    loginDto: LoginDto,
   ): Promise<AuthResponse | UnauthorizedException> {
-    const user = await this.validateUser(signInDto);
+    const user = await this.validateUser(loginDto);
 
     if (!user) {
       throw new UnauthorizedException();
@@ -46,37 +84,22 @@ export class AuthService {
   }
 
   async signIn(user: SafeUser): Promise<AuthResponse> {
-    const payload: JwtPayload = {
-      sub: user.id,
-      username: user.username,
-      email: user.email,
-    };
+    const payload: JwtPayload = user;
 
-    const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        expiresIn: '15m',
-      }),
-      this.jwtService.signAsync(payload, {
-        expiresIn: '7d',
-        secret: process.env.JWT_REFRESH_SECRET,
-      }),
-    ]);
+    const { accessToken, refreshToken } = await this.generateTokens(payload);
 
-    const hashedRefreshToken = await bcrypt.hash(refresh_token, 10);
-    await this.userService.updateRefreshToken(user.id, hashedRefreshToken);
+    await this.userService.updateRefreshToken(user.id, refreshToken);
 
     return {
-      accessToken: access_token,
-      refreshToken: refresh_token,
+      accessToken,
+      refreshToken,
       ...user,
     };
   }
 
-  async refreshTokens(
-    userId: string,
-    refreshToken: string,
-  ): Promise<AuthResponse> {
-    const user = await this.userService.findOne(userId);
+  async refreshTokens(refreshTokenDto: RefreshTokenDto): Promise<AuthResponse> {
+    const user = await this.userService.findOne(refreshTokenDto.id);
+
     if (!user || !user.refreshToken) {
       throw new ForbiddenException('Access Denied');
     }
@@ -85,12 +108,10 @@ export class AuthService {
       throw new ForbiddenException('Invalid stored refresh token');
     }
 
-    const isMatch: boolean = await bcrypt.compare(
-      refreshToken,
-      user.refreshToken,
-    );
+    const isValid: boolean =
+      (await this.hashData(refreshTokenDto.refreshToken)) == user.refreshToken;
 
-    if (!isMatch) {
+    if (!isValid) {
       throw new ForbiddenException('Invalid refresh token');
     }
 
@@ -101,5 +122,71 @@ export class AuthService {
     };
 
     return this.signIn(safeUser);
+  }
+
+  async changePassword(id: string, changePasswordDto: ChangePasswordDto) {
+    const user = await this.userService.findOne(id);
+    const isValid: boolean =
+      user &&
+      (await this.hashData(changePasswordDto.oldPassword)) == user.password;
+
+    if (!isValid) {
+      new UnauthorizedException('Wrong credentials');
+    }
+
+    await this.userService.updatePassword(id, changePasswordDto.newPassword);
+
+    return { message: 'Password changed successfully' };
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userService.findOneByEmail(email);
+    if (!user) return;
+
+    const payload: JwtPayload = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    };
+    const token = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_RESET_SECRET,
+      expiresIn: '15m',
+    });
+
+    //const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
+
+    await this.mailService.sendPasswordResetEmail(user.email, resetLink);
+  }
+
+  private async verifyResetToken(token: string): Promise<JwtPayload | null> {
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: process.env.JWT_RESET_SECRET,
+      });
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
+    const payload = await this.verifyResetToken(resetPasswordDto.token);
+
+    if (!payload) {
+      throw new ForbiddenException('Invalid or expired token');
+    }
+
+    const user = await this.userService.findOne(payload.id);
+    if (!user) throw new ForbiddenException('Invalid token');
+
+    await this.userService.updatePassword(
+      user.id,
+      resetPasswordDto.newPassword,
+    );
+  }
+
+  async logout(id: string): Promise<void> {
+    await this.userService.updateRefreshToken(id, null);
   }
 }
