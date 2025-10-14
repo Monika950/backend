@@ -9,6 +9,7 @@ export class CreateUserDto {
   @IsString()
   @MinLength(8)
   @IsStrongPassword()
+  @IsNotEmpty()
   password: string;
 
   @IsNotEmpty()

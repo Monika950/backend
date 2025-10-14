@@ -7,7 +7,6 @@ import {
   Patch,
   Post,
   Req,
-  Request,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from './auth.guard';
@@ -17,6 +16,8 @@ import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { SafeUser } from './interfaces/safe-user.interface';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -35,14 +36,14 @@ export class AuthController {
   }
   @UseGuards(AuthGuard)
   @Get('me')
-  getCurrentUser(@Req() req: Request): SafeUser {
-    return req.user as unknown as SafeUser; //fix
+  getCurrentUser(@Req() req): SafeUser {
+    return req.user;
   }
 
   @Post('refresh')
-  async refresh(@Body() body: { userId: string; refreshToken: string }) {
-    return this.authService.refreshTokens(body.userId, body.refreshToken);
-  } //dto
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshTokens(refreshTokenDto);
+  }
 
   @UseGuards(AuthGuard)
   @Patch('change-password')
@@ -50,30 +51,25 @@ export class AuthController {
     @Req() req,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    const userId = req.user.id;
-    return this.authService.changePassword(
-      userId,
-      changePasswordDto.oldPassword,
-      changePasswordDto.newPassword,
-    );
+    return this.authService.changePassword(req.user.id, changePasswordDto);
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body('email') forgotPasswordDto: ForgotPasswordDto) {
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     await this.authService.forgotPassword(forgotPasswordDto.email);
     return { message: 'If an account exists, a reset link has been sent.' };
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() body: { token: string; password: string }) {
-    await this.authService.resetPassword(body.token, body.password);
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    await this.authService.resetPassword(resetPasswordDto);
     return { message: 'Password reset successful.' };
   }
 
   @UseGuards(AuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Req() req: any) {
+  async logout(@Req() req) {
     const userId = req.user.id;
     await this.authService.logout(userId);
     return { message: 'Successfully logged out' };

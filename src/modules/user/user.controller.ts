@@ -30,9 +30,9 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  async getProfile(@Req() req: Request): Promise<User> {
+  async getProfile(@Req() req): Promise<User> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const userId = (req.user as any).id; //future
+    const userId = req.user.id; //future
     return this.userService.findOne(userId);
   }
   @UseGuards(AuthGuard)

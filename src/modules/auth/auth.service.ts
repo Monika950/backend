@@ -12,17 +12,26 @@ import { SafeUser } from './interfaces/safe-user.interface';
 import { AuthResponse } from './interfaces/auth-response.interface';
 import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { MailService } from '../../services/mail.service';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
     const user = await this.userService.create(registerDto);
-    return this.generateTokens(user);
+
+    return this.generateTokens({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+    });
   }
 
   private async generateTokens(
@@ -41,14 +50,15 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async hashData(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
+  async hashData(data: string): Promise<string> {
+    return bcrypt.hash(data, 10);
   }
 
   async validateUser(loginDto: LoginDto): Promise<SafeUser | null> {
     const user = await this.userService.findOneByEmail(loginDto.email);
-    console.log(user.password, loginDto.password); //hashing
-    const isValid = user && (await user.comparePassword(loginDto.password));
+
+    const isValid =
+      user && (await this.hashData(loginDto.password)) == user.password;
 
     if (!isValid) {
       return null;
@@ -78,8 +88,7 @@ export class AuthService {
 
     const { accessToken, refreshToken } = await this.generateTokens(payload);
 
-    const hashedRefreshToken = await this.hashData(refreshToken);
-    await this.userService.updateRefreshToken(user.id, hashedRefreshToken);
+    await this.userService.updateRefreshToken(user.id, refreshToken);
 
     return {
       accessToken,
@@ -88,11 +97,9 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(
-    userId: string,
-    refreshToken: string,
-  ): Promise<AuthResponse> {
-    const user = await this.userService.findOne(userId);
+  async refreshTokens(refreshTokenDto: RefreshTokenDto): Promise<AuthResponse> {
+    const user = await this.userService.findOne(refreshTokenDto.id);
+
     if (!user || !user.refreshToken) {
       throw new ForbiddenException('Access Denied');
     }
@@ -101,12 +108,10 @@ export class AuthService {
       throw new ForbiddenException('Invalid stored refresh token');
     }
 
-    const isMatch: boolean = await bcrypt.compare(
-      refreshToken,
-      user.refreshToken,
-    );
+    const isValid: boolean =
+      (await this.hashData(refreshTokenDto.refreshToken)) == user.refreshToken;
 
-    if (!isMatch) {
+    if (!isValid) {
       throw new ForbiddenException('Invalid refresh token');
     }
 
@@ -119,15 +124,17 @@ export class AuthService {
     return this.signIn(safeUser);
   }
 
-  async changePassword(id: string, oldPassword: string, newPassword: string) {
+  async changePassword(id: string, changePasswordDto: ChangePasswordDto) {
     const user = await this.userService.findOne(id);
-    const isValid = user && (await user.comparePassword(oldPassword));
+    const isValid: boolean =
+      user &&
+      (await this.hashData(changePasswordDto.oldPassword)) == user.password;
 
     if (!isValid) {
       new UnauthorizedException('Wrong credentials');
     }
 
-    await this.userService.updatePassword(id, newPassword);
+    await this.userService.updatePassword(id, changePasswordDto.newPassword);
 
     return { message: 'Password changed successfully' };
   }
@@ -146,10 +153,10 @@ export class AuthService {
       expiresIn: '15m',
     });
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`; //?
+    //const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
 
-    // send reset email
-    // await this.emailService.sendPasswordReset(user.email, resetLink);//implement
+    await this.mailService.sendPasswordResetEmail(user.email, resetLink);
   }
 
   private async verifyResetToken(token: string): Promise<JwtPayload | null> {
@@ -163,8 +170,9 @@ export class AuthService {
     }
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    const payload = await this.verifyResetToken(token);
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
+    const payload = await this.verifyResetToken(resetPasswordDto.token);
+
     if (!payload) {
       throw new ForbiddenException('Invalid or expired token');
     }
@@ -172,7 +180,10 @@ export class AuthService {
     const user = await this.userService.findOne(payload.id);
     if (!user) throw new ForbiddenException('Invalid token');
 
-    await this.userService.updatePassword(user.id, newPassword);
+    await this.userService.updatePassword(
+      user.id,
+      resetPasswordDto.newPassword,
+    );
   }
 
   async logout(id: string): Promise<void> {

@@ -41,6 +41,12 @@ export class User {
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }
+
+  @BeforeInsert()
+  async hashRefreshToken() {
+    if (!this.refreshToken) return;
+    this.refreshToken = await bcrypt.hash(this.refreshToken, 10);
+  }
   async comparePassword(attempt: string): Promise<boolean> {
     return bcrypt.compare(attempt, this.password);
   }
