@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -58,9 +59,9 @@ export class TreasureHuntService {
     });
   }
 
-  async findOne(id: string, userId: string) {
+  async findOne(huntId: string, userId: string) {
     const relation = await this.huntUserRepo.findOne({
-      where: { treasureHunt: { id }, user: { id: userId } },
+      where: { treasureHunt: { huntId }, user: { id: userId } },
       relations: ['treasureHunt'],
     });
     if (!relation)
@@ -68,25 +69,53 @@ export class TreasureHuntService {
     return relation.treasureHunt;
   }
 
-  async update(id: string, userId: string, dto: UpdateTreasureHuntDto) {
-    await this.ensureOwner(id, userId);
-    await this.treasureHuntRepo.update(id, dto);
-    return this.treasureHuntRepo.findOneBy({ id });
+  async update(huntId: string, userId: string, dto: UpdateTreasureHuntDto) {
+    await this.ensureOwner(huntId, userId);
+    await this.treasureHuntRepo.update(huntId, dto);
+    return this.treasureHuntRepo.findOneBy({ id: huntId });
   }
 
-  async remove(id: string, userId: string) {
-    await this.ensureOwner(id, userId);
-    await this.treasureHuntRepo.delete(id);
+  async remove(huntId: string, userId: string) {
+    await this.ensureOwner(huntId, userId);
+    await this.treasureHuntRepo.delete(huntId);
     return { message: 'Treasure hunt deleted successfully' };
   }
 
-  async addOwner(id: string, requestUserId: string, newOwnerId: string) {
-    await this.ensureOwner(id, requestUserId);
+  async joinByCode(userId: string, code: string) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('User not found');
+
+    const treasureHunt = await this.treasureHuntRepo.findOneBy({ code });
+    if (!treasureHunt)
+      throw new NotFoundException('Invalid code or treasure hunt not found');
+
+    const existing = await this.huntUserRepo.findOne({
+      where: { user: { id: userId }, treasureHunt: { id: treasureHunt.id } },
+    });
+    if (existing)
+      throw new BadRequestException('Already joined this treasure hunt');
+
+    const relation = this.huntUserRepo.create({
+      user,
+      treasureHunt,
+      role: 'participant',
+    });
+
+    await this.huntUserRepo.save(relation);
+
+    return {
+      message: 'Successfully joined the treasure hunt',
+      treasureHuntId: treasureHunt.id,
+    };
+  }
+
+  async addOwner(huntId: string, requestUserId: string, newOwnerId: string) {
+    await this.ensureOwner(huntId, requestUserId);
 
     const newOwner = await this.userRepo.findOneBy({ id: newOwnerId });
     if (!newOwner) throw new NotFoundException('User not found');
 
-    const hunt = await this.treasureHuntRepo.findOneBy({ id: id });
+    const hunt = await this.treasureHuntRepo.findOneBy({ id: huntId });
     await this.huntUserRepo.save({
       user: newOwner,
       treasureHunt: hunt,
@@ -96,24 +125,24 @@ export class TreasureHuntService {
     return { message: 'Owner added successfully' };
   }
 
-  async getParticipants(id: string, requestUserId: string) {
-    await this.ensureMember(id, requestUserId);
+  async getParticipants(huntId: string, requestUserId: string) {
+    await this.ensureMember(huntId, requestUserId);
     return this.huntUserRepo.find({
-      where: { treasureHunt: { id: id } },
+      where: { treasureHunt: { id: huntId } },
       relations: ['user'],
     });
   }
 
   async changeRole(
-    id: string,
+    huntId: string,
     requestUserId: string,
     targetUserId: string,
     role: string,
   ) {
-    await this.ensureOwner(id, requestUserId);
+    await this.ensureOwner(huntId, requestUserId);
 
     const relation = await this.huntUserRepo.findOne({
-      where: { treasureHunt: { id: id }, user: { id: targetUserId } },
+      where: { treasureHunt: { id: huntId }, user: { id: targetUserId } },
     });
 
     if (!relation) throw new NotFoundException('User not part of this hunt');
