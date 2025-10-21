@@ -1,34 +1,54 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Req,
+} from '@nestjs/common';
 import { LocationService } from './location.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Location } from './entities/location.entity';
 
 @Controller('location')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
   @Post()
-  create(@Body() createLocationDto: CreateLocationDto) {
-    return this.locationService.create(createLocationDto);
+  @ApiOperation({ summary: 'Create a new location' })
+  @ApiResponse({ status: 201, description: 'Location created', type: Location })
+  async create(@Req() req, @Body() dto: CreateLocationDto) {
+    return this.locationService.create(dto, req.user.id);
   }
 
-  @Get()
-  findAll() {
-    return this.locationService.findAll();
+  @Get('/hunt/:treasureHuntId')
+  async findAllForHunt(
+    @Param('treasureHuntId') treasureHuntId: string,
+    @Req() req,
+  ) {
+    return this.locationService.findAllForHunt(treasureHuntId, req.user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.locationService.findOne(+id);
+  async findOne(@Param('id') id: string, @Req() req) {
+    return this.locationService.findOne(id, req.user.id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLocationDto: UpdateLocationDto) {
-    return this.locationService.update(+id, updateLocationDto);
+  async update(
+    @Param('id') id: string,
+    @Req() req,
+    @Body() dto: UpdateLocationDto,
+  ) {
+    return this.locationService.update(id, dto, req.user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.locationService.remove(+id);
+  async remove(@Param('id') id: string, @Req() req) {
+    return this.locationService.remove(id, req.user.id);
   }
 }

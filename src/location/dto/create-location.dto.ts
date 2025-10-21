@@ -4,6 +4,8 @@ import {
   IsObject,
   IsUrl,
   IsOptional,
+  IsNumber,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -48,4 +50,15 @@ export class CreateLocationDto {
     example: '/uploads/nevsky.jpg',
   })
   image?: string;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  orderIndex: number;
+
+  @ApiProperty({
+    example: 'a1234567-89ab-cdef-1234-56789abcdef0',
+    description: 'ID of the treasure hunt this location belongs to',
+  })
+  @IsUUID()
+  treasureHuntId: string;
 }
