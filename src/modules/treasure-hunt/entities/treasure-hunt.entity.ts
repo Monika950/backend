@@ -9,6 +9,7 @@ import {
 import { Location } from '../../location/entities/location.entity';
 import { User } from '../../user/entities/user.entity';
 import { UserProgress } from '../../user-progress/entities/user-progress.entity';
+import { Matches } from 'class-validator';
 
 @Entity()
 export class TreasureHunt {
@@ -27,7 +28,8 @@ export class TreasureHunt {
   @OneToMany(() => Location, (location) => location.treasureHunt)
   locations: Location[];
 
-  @Column({ unique: true })
+  @Column({ unique: true, length: 6 })
+  @Matches(/^\d{6}$/, { message: 'Code must be exactly 6 digits' })
   code: string;
 
   @Column()
