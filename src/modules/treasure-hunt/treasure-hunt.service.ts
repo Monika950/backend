@@ -1,5 +1,5 @@
 import {
-    BadRequestException,
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -61,7 +61,7 @@ export class TreasureHuntService {
 
   async findOne(huntId: string, userId: string) {
     const relation = await this.huntUserRepo.findOne({
-      where: { treasureHunt: { huntId }, user: { id: userId } },
+      where: { treasureHunt: { id: huntId }, user: { id: userId } },
       relations: ['treasureHunt'],
     });
     if (!relation)
@@ -150,7 +150,7 @@ export class TreasureHuntService {
     return this.huntUserRepo.save(relation);
   }
 
-  private async ensureOwner(huntId: string, userId: string) {
+  async ensureOwner(huntId: string, userId: string) {
     const relation = await this.huntUserRepo.findOne({
       where: {
         treasureHunt: { id: huntId },
@@ -162,7 +162,7 @@ export class TreasureHuntService {
       throw new ForbiddenException('Only owners can perform this action');
   }
 
-  private async ensureMember(huntId: string, userId: string) {
+  async ensureMember(huntId: string, userId: string) {
     const relation = await this.huntUserRepo.findOne({
       where: { treasureHunt: { id: huntId }, user: { id: userId } },
     });

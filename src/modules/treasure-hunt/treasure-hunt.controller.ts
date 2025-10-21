@@ -13,6 +13,7 @@ import { TreasureHuntService } from './treasure-hunt.service';
 import { CreateTreasureHuntDto } from './dto/create-treasure-hunt.dto';
 import { UpdateTreasureHuntDto } from './dto/update-treasure-hunt.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import { JoinTreasureHuntDto } from './dto/join-treasure-hunt.dto';
 
 @Controller('treasure-hunt')
 export class TreasureHuntController {
@@ -48,6 +49,11 @@ export class TreasureHuntController {
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req) {
     return this.treasureHuntService.remove(id, req.user.id);
+  }
+
+  @Post('join')
+  async join(@Req() req, @Body() dto: JoinTreasureHuntDto) {
+    return this.treasureHuntService.joinByCode(req.user.id, dto.code);
   }
 
   @Post(':id/owners/:userId')
