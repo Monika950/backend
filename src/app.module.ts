@@ -6,7 +6,8 @@ import { UserModule } from './modules/user/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
-import { LocationModule } from './location/location.module';
+import { TreasureHuntModule } from './modules/treasure-hunt/treasure-hunt.module';
+import { LocationModule } from './modules/location/location.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { LocationModule } from './location/location.module';
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     UserModule,
     AuthModule,
+    TreasureHuntModule,
     LocationModule,
   ],
   controllers: [AppController],
