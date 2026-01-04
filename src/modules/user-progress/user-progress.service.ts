@@ -4,7 +4,8 @@ import { UpdateUserProgressDto } from './dto/update-user-progress.dto';
 
 @Injectable()
 export class UserProgressService {
-  create(createUserProgressDto: CreateUserProgressDto) {
+  create(_createUserProgressDto: CreateUserProgressDto) {
+    void _createUserProgressDto;
     return 'This action adds a new userProgress';
   }
 
@@ -16,7 +17,8 @@ export class UserProgressService {
     return `This action returns a #${id} userProgress`;
   }
 
-  update(id: number, updateUserProgressDto: UpdateUserProgressDto) {
+  update(id: number, _updateUserProgressDto: UpdateUserProgressDto) {
+    void _updateUserProgressDto;
     return `This action updates a #${id} userProgress`;
   }
 

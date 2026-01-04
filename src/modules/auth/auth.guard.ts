@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CanActivate,
   ExecutionContext,
@@ -9,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { Request } from 'express';
 
 dotenv.config();
 
@@ -17,7 +16,9 @@ export class AuthGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user?: JwtPayload }>();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException();
@@ -36,7 +37,7 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromHeader(request): string | undefined {
+  private extractTokenFromHeader(request: Request): string | undefined {
     const authorization = request.headers.authorization;
     const [type, token] = authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;

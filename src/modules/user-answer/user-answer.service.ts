@@ -4,7 +4,8 @@ import { UpdateUserAnswerDto } from './dto/update-user-answer.dto';
 
 @Injectable()
 export class UserAnswerService {
-  create(createUserAnswerDto: CreateUserAnswerDto) {
+  create(_createUserAnswerDto: CreateUserAnswerDto) {
+    void _createUserAnswerDto;
     return 'This action adds a new userAnswer';
   }
 
@@ -16,7 +17,8 @@ export class UserAnswerService {
     return `This action returns a #${id} userAnswer`;
   }
 
-  update(id: number, updateUserAnswerDto: UpdateUserAnswerDto) {
+  update(id: number, _updateUserAnswerDto: UpdateUserAnswerDto) {
+    void _updateUserAnswerDto;
     return `This action updates a #${id} userAnswer`;
   }
 

@@ -14,15 +14,34 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const status = exception.getStatus();
-    const res: any = exception.getResponse();
+    const responseBody = exception.getResponse() as unknown;
 
-    const message =
-      typeof res === 'string' ? res : res.message || 'An error occurred';
+    let message = 'An error occurred';
+    // Default for string response bodies was 'ERROR' previously
+    let errorCode = 'ERROR';
+
+    if (typeof responseBody === 'string') {
+      message = responseBody;
+    } else if (responseBody && typeof responseBody === 'object') {
+      const obj = responseBody as Record<string, unknown>;
+      const m = obj.message;
+      // When object, default to UNKNOWN unless explicit 'error' provided
+      errorCode = 'UNKNOWN';
+      if (typeof m === 'string') {
+        message = m;
+      } else if (Array.isArray(m)) {
+        message = m.join(', ');
+      }
+      const e = obj.error;
+      if (typeof e === 'string') {
+        errorCode = e;
+      }
+    }
 
     response.status(status).json({
       status: 'error',
       message,
-      errorCode: typeof res === 'string' ? 'ERROR' : res.error || 'UNKNOWN',
+      errorCode,
       timestamp: new Date().toISOString(),
       path: request.url,
     });

@@ -18,6 +18,8 @@ import { SafeUser } from './interfaces/safe-user.interface';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { Request } from 'express';
+type AuthedRequest = Request & { user: SafeUser };
 
 @Controller('auth')
 export class AuthController {
@@ -36,7 +38,7 @@ export class AuthController {
   }
   @UseGuards(AuthGuard)
   @Get('me')
-  getCurrentUser(@Req() req): SafeUser {
+  getCurrentUser(@Req() req: AuthedRequest): SafeUser {
     return req.user;
   }
 
@@ -48,7 +50,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Patch('change-password')
   async changePassword(
-    @Req() req,
+    @Req() req: AuthedRequest,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(req.user.id, changePasswordDto);
@@ -69,7 +71,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Req() req) {
+  async logout(@Req() req: AuthedRequest) {
     const userId = req.user.id;
     await this.authService.logout(userId);
     return { message: 'Successfully logged out' };

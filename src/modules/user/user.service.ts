@@ -8,6 +8,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -93,14 +94,20 @@ export class UserService {
   }
 
   async updatePassword(id: string, newPassword: string): Promise<void> {
-    await this.usersRepository.update(id, { password: newPassword });
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.update(id, { password: hashed });
   }
 
   async updateRefreshToken(
     id: string,
     refreshToken: string | null,
   ): Promise<void> {
-    await this.usersRepository.update(id, { refreshToken });
+    if (refreshToken) {
+      const hashed = await bcrypt.hash(refreshToken, 10);
+      await this.usersRepository.update(id, { refreshToken: hashed });
+    } else {
+      await this.usersRepository.update(id, { refreshToken: null });
+    }
   }
 
   async clearRefreshToken(id: string): Promise<void> {

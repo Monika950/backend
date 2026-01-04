@@ -98,7 +98,7 @@ export class TreasureHuntService {
     const relation = this.huntUserRepo.create({
       user,
       treasureHunt,
-      role: 'participant',
+      role: TreasureHuntUserRole.PARTICIPANT,
     });
 
     await this.huntUserRepo.save(relation);

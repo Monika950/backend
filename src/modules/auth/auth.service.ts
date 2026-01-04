@@ -56,9 +56,11 @@ export class AuthService {
 
   async validateUser(loginDto: LoginDto): Promise<SafeUser | null> {
     const user = await this.userService.findOneByEmail(loginDto.email);
+    if (!user) {
+      return null;
+    }
 
-    const isValid =
-      user && (await this.hashData(loginDto.password)) == user.password;
+    const isValid = await bcrypt.compare(loginDto.password, user.password);
 
     if (!isValid) {
       return null;
@@ -108,8 +110,10 @@ export class AuthService {
       throw new ForbiddenException('Invalid stored refresh token');
     }
 
-    const isValid: boolean =
-      (await this.hashData(refreshTokenDto.refreshToken)) == user.refreshToken;
+    const isValid = await bcrypt.compare(
+      refreshTokenDto.refreshToken,
+      user.refreshToken,
+    );
 
     if (!isValid) {
       throw new ForbiddenException('Invalid refresh token');
@@ -126,12 +130,12 @@ export class AuthService {
 
   async changePassword(id: string, changePasswordDto: ChangePasswordDto) {
     const user = await this.userService.findOne(id);
-    const isValid: boolean =
+    const isValid =
       user &&
-      (await this.hashData(changePasswordDto.oldPassword)) == user.password;
+      (await bcrypt.compare(changePasswordDto.oldPassword, user.password));
 
     if (!isValid) {
-      new UnauthorizedException('Wrong credentials');
+      throw new UnauthorizedException('Wrong credentials');
     }
 
     await this.userService.updatePassword(id, changePasswordDto.newPassword);
@@ -153,8 +157,8 @@ export class AuthService {
       expiresIn: '15m',
     });
 
-    //const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetLink = `${baseUrl}/auth/reset-password?token=${token}`;
 
     await this.mailService.sendPasswordResetEmail(user.email, resetLink);
   }

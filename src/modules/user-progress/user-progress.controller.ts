@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { UserProgressService } from './user-progress.service';
 import { CreateUserProgressDto } from './dto/create-user-progress.dto';
 import { UpdateUserProgressDto } from './dto/update-user-progress.dto';
@@ -23,7 +31,10 @@ export class UserProgressController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserProgressDto: UpdateUserProgressDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateUserProgressDto: UpdateUserProgressDto,
+  ) {
     return this.userProgressService.update(+id, updateUserProgressDto);
   }
 

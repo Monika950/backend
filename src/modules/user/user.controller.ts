@@ -14,6 +14,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { User } from './entities/user.entity';
+import { Request } from 'express';
+type AuthedRequest = Request & { user: { id: string } };
 
 @Controller('users')
 export class UserController {
@@ -30,9 +32,8 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  async getProfile(@Req() req): Promise<User> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const userId = req.user.id; //future
+  async getProfile(@Req() req: AuthedRequest): Promise<User> {
+    const userId = req.user.id;
     return this.userService.findOne(userId);
   }
   @UseGuards(AuthGuard)
