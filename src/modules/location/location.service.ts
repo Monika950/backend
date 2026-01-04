@@ -26,8 +26,14 @@ export class LocationService {
     if (!hunt) throw new NotFoundException('Treasure hunt not found');
 
     const location = this.locationRepo.create({
-      ...dto,
       treasureHunt: hunt,
+      coordinates: dto.coordinates,
+      name: dto.name,
+      question: dto.question,
+      correctAnswer: dto.correctAnswer,
+      hint: dto.hint,
+      image: dto.image,
+      order_index: dto.orderIndex,
     });
     return this.locationRepo.save(location);
   }

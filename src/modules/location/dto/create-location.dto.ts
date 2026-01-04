@@ -34,6 +34,14 @@ export class CreateLocationDto {
   })
   question: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: 'Correct answer for validation',
+    example: 'Hristo Botev',
+  })
+  correctAnswer: string;
+
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({

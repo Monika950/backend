@@ -74,6 +74,15 @@ export class Location {
   })
   hint: string;
 
+  @Column({ type: 'text' })
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: 'Correct answer for validation',
+    example: 'Hristo Botev',
+  })
+  correctAnswer: string;
+
   @Column()
   @IsString()
   @IsNotEmpty()
