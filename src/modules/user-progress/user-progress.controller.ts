@@ -2,44 +2,67 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
+  Body,
   Param,
-  Delete,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { UserProgressService } from './user-progress.service';
-import { CreateUserProgressDto } from './dto/create-user-progress.dto';
-import { UpdateUserProgressDto } from './dto/update-user-progress.dto';
+import { StartHuntDto } from './dto/start-hunt.dto';
+import { UpdatePositionDto } from './dto/update-position.dto';
+import { CompleteLocationDto } from './dto/complete-location.dto';
+import { AbandonHuntDto } from './dto/abandon-hunt.dto';
+import { AuthGuard } from '../auth/auth.guard';
 
+type AuthedRequest = Request & { user: { id: string } };
+
+@UseGuards(AuthGuard)
 @Controller('user-progress')
 export class UserProgressController {
   constructor(private readonly userProgressService: UserProgressService) {}
 
-  @Post()
-  create(@Body() createUserProgressDto: CreateUserProgressDto) {
-    return this.userProgressService.create(createUserProgressDto);
+  @Post('start')
+  async start(@Req() req: AuthedRequest, @Body() dto: StartHuntDto) {
+    return this.userProgressService.startProgress(req.user.id, dto.huntId);
   }
 
-  @Get()
-  findAll() {
-    return this.userProgressService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userProgressService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateUserProgressDto: UpdateUserProgressDto,
+  @Patch('update-position')
+  async updatePosition(
+    @Req() req: AuthedRequest,
+    @Body() dto: UpdatePositionDto,
   ) {
-    return this.userProgressService.update(+id, updateUserProgressDto);
+    return this.userProgressService.updatePosition(
+      req.user.id,
+      dto.huntId,
+      dto.lat,
+      dto.lng,
+    );
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userProgressService.remove(+id);
+  @Patch('complete-location')
+  async completeLocation(
+    @Req() req: AuthedRequest,
+    @Body() dto: CompleteLocationDto,
+  ) {
+    return this.userProgressService.completeLocation(
+      req.user.id,
+      dto.huntId,
+      dto.locationId,
+    );
+  }
+
+  @Patch('abandon')
+  async abandon(@Req() req: AuthedRequest, @Body() dto: AbandonHuntDto) {
+    return this.userProgressService.abandon(req.user.id, dto.huntId);
+  }
+
+  @Get(':huntId')
+  async getProgress(
+    @Req() req: AuthedRequest,
+    @Param('huntId') huntId: string,
+  ) {
+    return this.userProgressService.getProgressForHunt(req.user.id, huntId);
   }
 }

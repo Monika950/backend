@@ -14,7 +14,7 @@ const connectDB = new DataSource({
   database: process.env.DATABASE_NAME,
   username: process.env.DATABASE_USER,
   password: process.env.DATABASE_PASSWORD,
-  migrations: [__dirname + '/../migrations/*.ts'],
+  migrations: [__dirname + '/migration/*{.ts,.js}'],
   entities: [__dirname + '/../**/entities/*.entity{.ts,.js}', User],
 });
 
