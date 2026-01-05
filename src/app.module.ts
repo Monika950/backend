@@ -8,6 +8,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { TreasureHuntModule } from './modules/treasure-hunt/treasure-hunt.module';
 import { LocationModule } from './modules/location/location.module';
+import { UserProgressModule } from './modules/user-progress/user-progress.module';
+import { UserAnswerModule } from './modules/user-answer/user-answer.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { LocationModule } from './modules/location/location.module';
     AuthModule,
     TreasureHuntModule,
     LocationModule,
+    UserProgressModule,
+    UserAnswerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
