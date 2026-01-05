@@ -13,7 +13,7 @@ import { User } from '../../user/entities/user.entity';
 @Entity()
 export class UserProgress {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @ManyToOne(() => User, (user) => user.progress)
   user: User;
@@ -27,8 +27,8 @@ export class UserProgress {
   @Column('jsonb', { nullable: true })
   currentCoordinates: { lat: number; lng: number };
 
-  @Column('int', { array: true, default: [] })
-  completedLocations: number[];
+  @Column('uuid', { array: true, default: [] })
+  completedLocations: string[];
 
   @Column({ default: 'in_progress' })
   status: 'in_progress' | 'completed' | 'abandoned';
