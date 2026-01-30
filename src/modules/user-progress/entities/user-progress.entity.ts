@@ -5,11 +5,13 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  Unique,
 } from 'typeorm';
 import { Location } from '../../location/entities/location.entity';
 import { TreasureHunt } from '../../treasure-hunt/entities/treasure-hunt.entity';
 import { User } from '../../user/entities/user.entity';
 
+@Unique(['user', 'treasureHunt'])
 @Entity()
 export class UserProgress {
   @PrimaryGeneratedColumn('uuid')
@@ -18,7 +20,9 @@ export class UserProgress {
   @ManyToOne(() => User, (user) => user.progress)
   user: User;
 
-  @ManyToOne(() => TreasureHunt, (treasureHunt) => treasureHunt.progress)
+  @ManyToOne(() => TreasureHunt, (treasureHunt) => treasureHunt.progress, {
+    onDelete: 'CASCADE',
+  })
   treasureHunt: TreasureHunt;
 
   @ManyToOne(() => Location, { nullable: true })

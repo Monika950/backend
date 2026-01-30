@@ -7,6 +7,7 @@ import { User } from '../user/entities/user.entity';
 import { TreasureHunt } from '../treasure-hunt/entities/treasure-hunt.entity';
 import { TreasureHuntUser } from '../treasure-hunt/entities/treasure-hunt-user.entity';
 import { Location } from '../location/entities/location.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { Location } from '../location/entities/location.entity';
       TreasureHuntUser,
       Location,
     ]),
+    NotificationsModule,
   ],
   controllers: [UserProgressController],
   providers: [UserProgressService],

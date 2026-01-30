@@ -11,6 +11,8 @@ import { User } from '../user/entities/user.entity';
 import { TreasureHunt } from '../treasure-hunt/entities/treasure-hunt.entity';
 import { TreasureHuntUser } from '../treasure-hunt/entities/treasure-hunt-user.entity';
 import { Location } from '../location/entities/location.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class UserProgressService {
@@ -25,6 +27,7 @@ export class UserProgressService {
     private readonly huntUserRepo: Repository<TreasureHuntUser>,
     @InjectRepository(Location)
     private readonly locationRepo: Repository<Location>,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // Helpers
@@ -41,7 +44,7 @@ export class UserProgressService {
   private async getFirstLocation(huntId: string): Promise<Location | null> {
     return this.locationRepo.findOne({
       where: { treasureHunt: { id: huntId } },
-      order: { order_index: 'ASC' },
+      order: { orderIndex: 'ASC' },
     });
   }
 
@@ -84,7 +87,16 @@ export class UserProgressService {
       completedAt: null,
     });
 
-    return this.progressRepo.save(progress);
+    const saved = await this.progressRepo.save(progress);
+
+    await this.notifications.create(
+      user.id,
+      NotificationType.HUNT_STARTED,
+      { huntName: hunt.name },
+      hunt.id,
+    );
+
+    return saved;
   }
 
   async updatePosition(
@@ -136,9 +148,9 @@ export class UserProgressService {
     const next = await this.locationRepo.findOne({
       where: {
         treasureHunt: { id: huntId },
-        order_index: MoreThan(current.order_index),
+        orderIndex: MoreThan(current.orderIndex),
       },
-      order: { order_index: 'ASC' },
+      order: { orderIndex: 'ASC' },
     });
 
     if (next) {
@@ -150,6 +162,15 @@ export class UserProgressService {
     }
 
     const saved = await this.progressRepo.save(progress);
+
+    if (saved.status === 'completed') {
+      await this.notifications.create(
+        userId,
+        NotificationType.HUNT_COMPLETED,
+        { huntName: progress.treasureHunt?.name },
+        huntId,
+      );
+    }
 
     return {
       status: saved.status,
@@ -171,7 +192,16 @@ export class UserProgressService {
     progress.completedAt = new Date();
     progress.currentLocation = null;
 
-    return this.progressRepo.save(progress);
+    const saved = await this.progressRepo.save(progress);
+
+    await this.notifications.create(
+      userId,
+      NotificationType.HUNT_ABANDONED,
+      { huntId },
+      huntId,
+    );
+
+    return saved;
   }
 
   async getProgressForHunt(userId: string, huntId: string) {
