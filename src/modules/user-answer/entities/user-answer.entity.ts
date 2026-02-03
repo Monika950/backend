@@ -16,13 +16,15 @@ export class UserAnswer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.answers)
+  @ManyToOne(() => User, (user) => user.answers, { onDelete: 'CASCADE' })
   user: User;
 
-  @ManyToOne(() => Location, (location) => location.answers)
+  @ManyToOne(() => Location, (location) => location.answers, {
+    onDelete: 'CASCADE',
+  })
   location: Location;
 
-  @ManyToOne(() => TreasureHunt)
+  @ManyToOne(() => TreasureHunt, { onDelete: 'CASCADE' })
   treasureHunt: TreasureHunt;
 
   @Column({ type: 'text' })

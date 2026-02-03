@@ -6,8 +6,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateUserAnswerDto } from './dto/create-user-answer.dto';
-import { UpdateUserAnswerDto } from './dto/update-user-answer.dto';
 import { UserAnswer } from './entities/user-answer.entity';
 import { User } from '../user/entities/user.entity';
 import { TreasureHunt } from '../treasure-hunt/entities/treasure-hunt.entity';
@@ -17,6 +15,7 @@ import {
 } from '../treasure-hunt/entities/treasure-hunt-user.entity';
 import { Location } from '../location/entities/location.entity';
 import { UserProgressService } from '../user-progress/user-progress.service';
+import { UpdateUserAnswerDto } from './dto/update-user-answer.dto';
 
 @Injectable()
 export class UserAnswerService {
@@ -62,7 +61,7 @@ export class UserAnswerService {
   private normalize(text: string): string {
     return text.trim().toLowerCase();
   }
-  
+
   async submitAnswer(userId: string, locationId: string, answer: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -141,5 +140,48 @@ export class UserAnswerService {
       relations: ['location', 'user'],
       order: { answeredAt: 'DESC' },
     });
+  }
+
+  async updateAnswer(
+    userId: string,
+    answerId: string,
+    dto: UpdateUserAnswerDto,
+  ) {
+    if (!dto.answer) {
+      throw new BadRequestException('Answer is required');
+    }
+
+    const entity = await this.answerRepo.findOne({
+      where: { id: answerId },
+      relations: ['user', 'location', 'treasureHunt'],
+    });
+    if (!entity) {
+      throw new NotFoundException('Answer not found');
+    }
+    if (entity.user.id !== userId) {
+      throw new ForbiddenException('You can only update your own answers');
+    }
+    if (dto.locationId && dto.locationId !== entity.location.id) {
+      throw new BadRequestException('Location cannot be changed');
+    }
+
+    const newIsCorrect =
+      this.normalize(dto.answer) ===
+      this.normalize(entity.location.correctAnswer ?? '');
+    const becameCorrect = !entity.isCorrect && newIsCorrect;
+
+    entity.answer = dto.answer;
+    entity.isCorrect = newIsCorrect;
+    await this.answerRepo.save(entity);
+
+    if (becameCorrect) {
+      await this.progressService.completeLocation(
+        userId,
+        entity.treasureHunt.id,
+        entity.location.id,
+      );
+    }
+
+    return entity;
   }
 }
