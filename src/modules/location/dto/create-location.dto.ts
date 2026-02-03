@@ -4,8 +4,9 @@ import {
   IsObject,
   IsUrl,
   IsOptional,
-  IsNumber,
+  IsInt,
   IsUUID,
+  Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -60,7 +61,8 @@ export class CreateLocationDto {
   image?: string;
 
   @ApiProperty({ example: 1 })
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   orderIndex: number;
 
   @ApiProperty({
