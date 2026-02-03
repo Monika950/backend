@@ -25,7 +25,7 @@ export class TreasureHuntUser {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => TreasureHunt, (hunt) => hunt.user)
+  @ManyToOne(() => TreasureHunt, (hunt) => hunt.user, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'treasure_hunt_id' })
   treasureHunt: TreasureHunt;
 

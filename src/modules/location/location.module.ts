@@ -6,12 +6,15 @@ import { Location } from './entities/location.entity';
 import { TreasureHunt } from '../treasure-hunt/entities/treasure-hunt.entity';
 import { TreasureHuntUser } from '../treasure-hunt/entities/treasure-hunt-user.entity';
 import { User } from '../user/entities/user.entity';
-import { TreasureHuntService } from '../treasure-hunt/treasure-hunt.service';
+import { TreasureHuntModule } from '../treasure-hunt/treasure-hunt.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Location, TreasureHunt, TreasureHuntUser, User])],
+  imports: [
+    TypeOrmModule.forFeature([Location, TreasureHunt, TreasureHuntUser, User]),
+    TreasureHuntModule,
+  ],
   controllers: [LocationController],
-  providers: [LocationService, TreasureHuntService],
+  providers: [LocationService],
   exports: [LocationService],
 })
 export class LocationModule {}

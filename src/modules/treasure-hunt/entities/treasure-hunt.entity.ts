@@ -32,8 +32,8 @@ export class TreasureHunt {
   @Matches(/^\d{6}$/, { message: 'Code must be exactly 6 digits' })
   code: string;
 
-  @Column()
-  image: string;
+  @Column({ nullable: true })
+  image?: string | null;
 
   @Column()
   start: Date;

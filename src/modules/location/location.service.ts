@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { Location } from './entities/location.entity';
@@ -33,7 +37,7 @@ export class LocationService {
       correctAnswer: dto.correctAnswer,
       hint: dto.hint,
       image: dto.image,
-      order_index: dto.orderIndex,
+      orderIndex: dto.orderIndex,
     });
     return this.locationRepo.save(location);
   }
@@ -42,7 +46,7 @@ export class LocationService {
     await this.treasureHuntService.ensureMember(treasureHuntId, userId);
     return this.locationRepo.find({
       where: { treasureHunt: { id: treasureHuntId } },
-      order: { order_index: 'ASC' },
+      order: { orderIndex: 'ASC' },
     });
   }
 
@@ -62,6 +66,9 @@ export class LocationService {
   }
 
   async update(locationId: string, dto: UpdateLocationDto, userId: string) {
+    if ('treasureHuntId' in dto) {
+      throw new BadRequestException('treasureHuntId cannot be updated');
+    }
     const location = await this.locationRepo.findOne({
       where: { id: locationId },
       relations: ['treasureHunt'],
