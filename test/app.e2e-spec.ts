@@ -17,9 +17,15 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return (
+      request(app.getHttpServer())
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .get('/')
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .expect(200)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .expect('Hello World!')
+    );
   });
 });

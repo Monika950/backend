@@ -179,6 +179,52 @@ export class UserProgressController {
     return this.userProgressService.abandon(req.user.id, dto.huntId);
   }
 
+  @Get(':huntId/user/:userId')
+  @ApiOperation({ summary: 'Get a participant progress for a treasure hunt (owner only)' })
+  @ApiParam({ name: 'huntId', description: 'Treasure hunt ID (UUID)' })
+  @ApiParam({ name: 'userId', description: 'Participant user ID (UUID)' })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ApiResponseDto) },
+        {
+          properties: {
+            data: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                status: { type: 'string' },
+                currentCoordinates: { type: 'object' },
+                completedLocations: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                startedAt: { type: 'string', format: 'date-time' },
+                completedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true,
+                },
+                updatedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+          },
+        },
+      ],
+    },
+  })
+  async getParticipantProgress(
+    @Req() req: AuthedRequest,
+    @Param('huntId') huntId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.userProgressService.getParticipantProgressForHunt(
+      req.user.id,
+      huntId,
+      userId,
+    );
+  }
+
   @Get(':huntId')
   @ApiOperation({ summary: 'Get progress for a treasure hunt' })
   @ApiParam({ name: 'huntId', description: 'Treasure hunt ID (UUID)' })

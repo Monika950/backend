@@ -9,7 +9,10 @@ import { Repository, MoreThan } from 'typeorm';
 import { UserProgress } from './entities/user-progress.entity';
 import { User } from '../user/entities/user.entity';
 import { TreasureHunt } from '../treasure-hunt/entities/treasure-hunt.entity';
-import { TreasureHuntUser } from '../treasure-hunt/entities/treasure-hunt-user.entity';
+import {
+  TreasureHuntUser,
+  TreasureHuntUserRole,
+} from '../treasure-hunt/entities/treasure-hunt-user.entity';
 import { Location } from '../location/entities/location.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
@@ -37,6 +40,22 @@ export class UserProgressService {
     });
     if (!rel) {
       throw new ForbiddenException('You are not part of this treasure hunt');
+    }
+    return rel;
+  }
+
+  private async ensureOwner(userId: string, huntId: string) {
+    const rel = await this.huntUserRepo.findOne({
+      where: {
+        user: { id: userId },
+        treasureHunt: { id: huntId },
+        role: TreasureHuntUserRole.OWNER,
+      },
+    });
+    if (!rel) {
+      throw new ForbiddenException(
+        'Only hunt owners can view participant progress',
+      );
     }
     return rel;
   }
@@ -212,6 +231,25 @@ export class UserProgressService {
     if (!progress) {
       throw new NotFoundException('Progress not found for this user and hunt');
     }
+    return progress;
+  }
+
+  async getParticipantProgressForHunt(
+    requestUserId: string,
+    huntId: string,
+    targetUserId: string,
+  ) {
+    await this.ensureOwner(requestUserId, huntId);
+
+    const progress = await this.progressRepo.findOne({
+      where: { user: { id: targetUserId }, treasureHunt: { id: huntId } },
+      relations: ['currentLocation', 'treasureHunt', 'user'],
+    });
+
+    if (!progress) {
+      throw new NotFoundException('Progress not found for this user and hunt');
+    }
+
     return progress;
   }
 }
