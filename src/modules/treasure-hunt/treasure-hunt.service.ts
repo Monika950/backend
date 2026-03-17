@@ -14,6 +14,8 @@ import {
   TreasureHuntUser,
   TreasureHuntUserRole,
 } from './entities/treasure-hunt-user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class TreasureHuntService {
@@ -24,6 +26,7 @@ export class TreasureHuntService {
     private readonly huntUserRepo: Repository<TreasureHuntUser>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async create(
@@ -103,6 +106,13 @@ export class TreasureHuntService {
 
     await this.huntUserRepo.save(relation);
 
+    await this.notifications.create(
+      userId,
+      NotificationType.HUNT_JOINED,
+      { huntName: treasureHunt.name },
+      treasureHunt.id,
+    );
+
     return {
       message: 'Successfully joined the treasure hunt',
       treasureHuntId: treasureHunt.id,
@@ -114,6 +124,15 @@ export class TreasureHuntService {
 
     const newOwner = await this.userRepo.findOneBy({ id: newOwnerId });
     if (!newOwner) throw new NotFoundException('User not found');
+
+    const existing = await this.huntUserRepo.findOne({
+      where: { user: { id: newOwnerId }, treasureHunt: { id: huntId } },
+    });
+    if (existing) {
+      existing.role = TreasureHuntUserRole.OWNER;
+      await this.huntUserRepo.save(existing);
+      return { message: 'Owner added successfully' };
+    }
 
     const hunt = await this.treasureHuntRepo.findOneBy({ id: huntId });
     await this.huntUserRepo.save({
@@ -148,6 +167,41 @@ export class TreasureHuntService {
     if (!relation) throw new NotFoundException('User not part of this hunt');
     relation.role = role as TreasureHuntUserRole; //dto
     return this.huntUserRepo.save(relation);
+  }
+
+  async removeParticipant(
+    huntId: string,
+    requestUserId: string,
+    targetUserId: string,
+  ) {
+    await this.ensureOwner(huntId, requestUserId);
+
+    const relation = await this.huntUserRepo.findOne({
+      where: { treasureHunt: { id: huntId }, user: { id: targetUserId } },
+    });
+
+    if (!relation) {
+      throw new NotFoundException('User not part of this hunt');
+    }
+
+    if (relation.role === TreasureHuntUserRole.OWNER) {
+      const ownerCount = await this.huntUserRepo.count({
+        where: {
+          treasureHunt: { id: huntId },
+          role: TreasureHuntUserRole.OWNER,
+        },
+      });
+
+      if (ownerCount <= 1) {
+        throw new BadRequestException(
+          'Treasure hunt must have at least one owner',
+        );
+      }
+    }
+
+    await this.huntUserRepo.delete(relation.id);
+
+    return { message: 'Participant removed successfully' };
   }
 
   async ensureOwner(huntId: string, userId: string) {
