@@ -10,6 +10,9 @@ import { TreasureHuntModule } from './modules/treasure-hunt/treasure-hunt.module
 import { LocationModule } from './modules/location/location.module';
 import { UserProgressModule } from './modules/user-progress/user-progress.module';
 import { UserAnswerModule } from './modules/user-answer/user-answer.module';
+import { TrackingModule } from './modules/tracking/tracking.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import { UserAnswerModule } from './modules/user-answer/user-answer.module';
     LocationModule,
     UserProgressModule,
     UserAnswerModule,
+    TrackingModule,
+    NotificationsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

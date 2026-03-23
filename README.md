@@ -1,98 +1,374 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend (NestJS) — Treasure Hunt App
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS backend for a treasure hunt application featuring authentication, user management, hunts, locations, user progress, answers, real-time tracking via Socket.IO, and user notifications via REST + WebSockets.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+- Node.js + TypeScript
+- NestJS
+- TypeORM (PostgreSQL)
+- Socket.IO (Gateway)
+- JWT authentication
+- ESLint + Prettier
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Architecture Overview
 
-## Project setup
+Modules:
 
-```bash
-$ npm install
+- Auth: Registration, login, logout, refresh, change/reset password, JWT guard
+- User: Users CRUD and profile
+- Treasure Hunt: Create/update/delete, join via 6-digit code, owners/participants management
+- Location: Locations for hunts with order_index, question, correctAnswer
+- User Progress: Start, update position, complete location, abandon, retrieve progress
+- User Answer: Submit answers per location (basic scaffolding)
+- Tracking: Socket.IO gateway under /tracking (join/leave/update_position)
+- Notifications:
+  - Entity: notification (id, userId, huntId?, type, payload JSONB, readAt, createdAt)
+  - Service: create/list/mark-read/mark-read-batch; emits `notifications:new` to user rooms
+  - Controller: REST for listing and marking read
+  - Gateway: /notifications namespace; JWT handshake; users join `user:{id}` rooms
+
+Key hooks wired:
+
+- On joinByCode -> Notification HUNT_JOINED
+- On start progress -> Notification HUNT_STARTED
+- On complete (when hunt finishes) -> Notification HUNT_COMPLETED
+- On abandon -> Notification HUNT_ABANDONED
+
+## Requirements
+
+- Node.js 18+ (recommended)
+- PostgreSQL 13+ (Docker compose provided)
+- Environment variables in `.env`
+
+## Environment Variables (.env example)
+
+```
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_NAME=treasure_hunt
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+
+# Logging & schema sync (sync true is only for local dev)
+DATABASE_LOGGING=false
+DATABASE_SYNCHRONIZE=false
+
+# JWT secret for auth + WS handshake
+JWT_SECRET=supersecretjwt
 ```
 
-## Compile and run the project
+Notes:
 
-```bash
-# development
-$ npm run start
+- For local development only, you can set `DATABASE_SYNCHRONIZE=true` to let TypeORM auto-create tables. In staging/production, use migrations.
 
-# watch mode
-$ npm run start:dev
+## Install
 
-# production mode
-$ npm run start:prod
+```
+npm install
 ```
 
-## Run tests
+## Database (Docker)
 
-```bash
-# unit tests
-$ npm run test
+Start PostgreSQL via docker-compose:
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```
+npm run postgre:up
 ```
 
-## Deployment
+Reset database (remove container + volumes, recreate, run migrations):
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+npm run postgre:reset
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Bring all compose services up (if you add more in docker-compose.yaml):
 
-## Resources
+```
+npm run compose:up
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## Migrations
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+DataSource: `src/database/data-source.ts` (migrations at `src/database/migration`).
 
-## Support
+Generate a migration by diff (will fail with “No changes” if synchronize already created tables):
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```
+npm run typeorm -- -d src/database/data-source.ts migration:generate src/database/migration/SomeName
+```
 
-## Stay in touch
+Create an empty migration (manual content):
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+npm run typeorm migration:create src/database/migration/SomeName
+```
+
+Run migrations:
+
+```
+npm run typeorm -- -d src/database/data-source.ts migration:run
+```
+
+Show migrations:
+
+```
+npm run typeorm -- -d src/database/data-source.ts migration:show
+```
+
+Revert last migration:
+
+```
+npm run typeorm -- -d src/database/data-source.ts migration:revert
+```
+
+Notifications migration:
+
+- `1767715240095-NotificationsInit.ts` creates indexes and handles already-existing `notification` table gracefully (idempotent).
+
+## Development
+
+Watch mode:
+
+```
+npm run start:dev
+```
+
+Build:
+
+```
+npm run build
+```
+
+Production mode (after build):
+
+```
+npm run start:prod
+```
+
+Formatting and lint:
+
+```
+npm run format
+npm run lint
+```
+
+Tip: If you see “Delete ␍” warnings (CRLF line endings), configure your editor to use LF and rerun `npm run lint`.
+
+## Seeding
+
+Seed the database (adjust seed content as needed):
+
+```
+npm run seed
+```
+
+## API Overview
+
+Base URL: `http://localhost:3000`
+
+- Auth
+  - POST /auth/register
+  - POST /auth/login
+  - POST /auth/logout
+  - POST /auth/refresh
+  - GET /auth/me
+  - PATCH /auth/change-password
+  - POST /auth/forgot-password
+  - POST /auth/reset-password
+
+- Users
+  - GET /users
+  - GET /users/me
+  - GET /users/:id
+  - POST /users
+  - PATCH /users/:id
+  - DELETE /users/:id
+
+- Treasure Hunt
+  - POST /treasure-hunt
+  - GET /treasure-hunt
+  - GET /treasure-hunt/:id
+  - PATCH /treasure-hunt/:id
+  - DELETE /treasure-hunt/:id
+  - POST /treasure-hunt/join (join by code)
+  - POST /treasure-hunt/:id/owners/:userId (add owner)
+  - GET /treasure-hunt/:id/participants
+  - PATCH /treasure-hunt/:id/participants/:userId (change role)
+
+- Location
+  - POST /location
+  - GET /location/hunt/:treasureHuntId
+  - GET /location/:id
+  - PATCH /location/:id
+  - DELETE /location/:id
+
+- User Progress
+  - POST /user-progress/start
+  - PATCH /user-progress/update-position
+  - PATCH /user-progress/complete-location
+  - PATCH /user-progress/abandon
+  - GET /user-progress/:huntId
+
+- User Answer (basic)
+  - POST /user-answer
+  - GET /user-answer/hunt/:huntId
+
+- Notifications
+  - GET /notifications
+    - Query: read=true|false, page, limit
+  - PATCH /notifications/:id/read
+  - PATCH /notifications/read-batch
+    - Body: { ids: string[] }
+
+- Uploads (S3 pre-signed)
+  - POST /uploads/presign
+    - Body: { kind: "location"|"hunt", filename, contentType, size }
+  - POST /uploads/presign-download
+    - Body: { key }
+
+Authorization:
+
+- All protected endpoints require `Authorization: Bearer <JWT>`.
+
+## Realtime (WebSockets)
+
+Authentication:
+
+- Pass JWT via Socket.IO `auth.token`, or via `Authorization: Bearer <JWT>` header in the handshake.
+- Unauthenticated clients are disconnected.
+
+Namespaces:
+
+- `/tracking`
+- `/notifications`
+
+Events (tracking namespace):
+
+- Client -> Server: `tracking:join`
+  - Payload: `{ huntId: string }`
+- Client -> Server: `tracking:leave`
+  - Payload: `{ huntId: string }`
+- Client -> Server: `tracking:update_position`
+  - Payload: `{ huntId: string, lat: number, lng: number, ts?: string }`
+  - Note: server rate-limits to 1 update/sec per user.
+- Server -> Clients in `hunt:{huntId}` room: `tracking:participant_joined`
+  - Payload: `{ userId: string }`
+- Server -> Clients in `hunt:{huntId}` room: `tracking:participant_left`
+  - Payload: `{ userId: string }`
+- Server -> Clients in `hunt:{huntId}` room: `tracking:position_updated`
+  - Payload: `{ userId: string, lat: number, lng: number, ts: string, currentLocationId: string | null }`
+
+Events (notifications namespace):
+
+- Server -> Client in `user:{userId}` room: `notifications:new`
+  - Payload: `{ id: string, type: string, payload: object | null, huntId: string | null, readAt: string | null, createdAt: string }`
+- Server -> Client in `user:{userId}` room: `notifications:read`
+  - Payload: `{ id: string, readAt: string }`
+- Server -> Client in `user:{userId}` room: `notifications:read_batch`
+  - Payload: `{ ids: string[], readAt: string }`
+
+Client example (socket.io-client):
+
+```ts
+import { io } from 'socket.io-client';
+
+const token = '<JWT>';
+const notifications = io('http://localhost:3000/notifications', {
+  auth: { token },
+});
+
+notifications.on('notifications:new', (n) => {
+  console.log('New notification:', n);
+});
+notifications.on('notifications:read', (n) => {
+  console.log('Read notification:', n);
+});
+notifications.on('notifications:read_batch', (n) => {
+  console.log('Read batch:', n);
+});
+```
+
+## WebSockets
+
+### Tracking — namespace `/tracking`
+
+- Handshake: pass JWT via `auth.token` or `Authorization: Bearer <JWT>` header
+- Rooms: per-hunt rooms
+- Events:
+  - `tracking:join` — join a hunt room
+  - `tracking:leave` — leave a hunt room
+  - `tracking:update_position` — push lat/lng; server broadcasts
+
+Client example (socket.io-client):
+
+```ts
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000/tracking', {
+  auth: { token: '<JWT>' },
+});
+socket.emit('tracking:join', { huntId: '<uuid>' });
+socket.emit('tracking:update_position', {
+  huntId: '<uuid>',
+  lat: 42.7,
+  lng: 23.3,
+});
+socket.on('tracking:position', (payload) => {
+  console.log('Position update:', payload);
+});
+```
+
+### Notifications — namespace `/notifications`
+
+- Handshake: pass JWT via `auth.token` or `Authorization: Bearer <JWT>` header
+- Server joins client to `user:{id}` room on connect
+- Event: `notifications:new` — emitted on actions: join/start/complete/abandon
+
+Client example:
+
+```ts
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000/notifications', {
+  auth: { token: '<JWT>' },
+});
+socket.on('notifications:new', (n) => {
+  console.log('New notification:', n);
+});
+```
+
+## Project Scripts
+
+From `package.json`:
+
+- build: `nest build`
+- format: `prettier --write "src/**/*.ts" "test/**/*.ts"`
+- start: `ts-node src/index.ts`
+- start:dev: `nest start --watch`
+- start:prod: `node dist/main`
+- lint: `eslint "{src,apps,libs,test}/**/*.ts" --fix`
+- test, test:watch, test:cov, test:e2e
+- typeorm: `typeorm-ts-node-commonjs` (use `-d src/database/data-source.ts`)
+- migration:create, migration:generate (cross-platform)
+- migration:run/show/revert
+- postgre:up/rm/reset
+- compose:up
+- ssl:generate (dev script in secrets)
+- seed
+
+## Troubleshooting
+
+- DI errors like “NotificationsService at index [N] is not available”:
+  - Ensure the module providing that service exports it and the consumer module imports the provider module.
+  - Example: `TreasureHuntModule` exports `TreasureHuntService`; `LocationModule` imports `TreasureHuntModule` and does not provide `TreasureHuntService` itself.
+
+- CRLF line endings warnings (Windows):
+  - Configure editor to use LF line endings and rerun `npm run lint`.
+
+- Migrations say “No changes found”:
+  - If `DATABASE_SYNCHRONIZE=true`, TypeORM may have already created tables. Use `migration:create` to add an explicit migration.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED (private project). Adjust as needed.
