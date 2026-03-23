@@ -50,6 +50,8 @@ export class UploadsService {
     this.s3 = new S3Client({
       region,
       credentials: { accessKeyId, secretAccessKey },
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
     });
   }
 
@@ -81,6 +83,10 @@ export class UploadsService {
       uploadUrl,
       expiresIn: 300,
       contentType: dto.contentType,
+      method: 'PUT',
+      requiredHeaders: {
+        'Content-Type': dto.contentType,
+      },
     };
   }
 
