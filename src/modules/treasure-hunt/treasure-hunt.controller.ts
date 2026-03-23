@@ -295,4 +295,31 @@ export class TreasureHuntController {
   ) {
     return this.treasureHuntService.changeRole(id, req.user.id, userId, role);
   }
+
+  @Delete(':id/participants/:userId')
+  @ApiOperation({ summary: 'Remove user from treasure hunt' })
+  @ApiParam({ name: 'id', description: 'Treasure hunt ID (UUID)' })
+  @ApiParam({ name: 'userId', description: 'Participant user ID (UUID)' })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ApiResponseDto) },
+        {
+          properties: {
+            data: {
+              type: 'object',
+              properties: { message: { type: 'string' } },
+            },
+          },
+        },
+      ],
+    },
+  })
+  async removeParticipant(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.treasureHuntService.removeParticipant(id, req.user.id, userId);
+  }
 }
