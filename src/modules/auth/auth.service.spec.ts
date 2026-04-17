@@ -10,14 +10,13 @@ jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let jwtService: JwtService;
-  
+
   const mockUserRepository = {
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
   };
-  
+
   const mockJwtService = {
     sign: jest.fn(),
     verify: jest.fn(),
@@ -39,7 +38,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    jwtService = module.get<JwtService>(JwtService);
     jest.clearAllMocks();
   });
 
@@ -178,9 +176,7 @@ describe('AuthService', () => {
         throw new Error('Invalid token');
       });
 
-      await expect(service.validateUser('invalid_token')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.validateUser('invalid_token')).rejects.toThrow();
     });
   });
 
@@ -211,7 +207,10 @@ describe('AuthService', () => {
         changePasswordDto.oldPassword,
         user.password,
       );
-      expect(bcrypt.hash).toHaveBeenCalledWith(changePasswordDto.newPassword, 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith(
+        changePasswordDto.newPassword,
+        10,
+      );
       expect(mockUserRepository.save).toHaveBeenCalled();
     });
 

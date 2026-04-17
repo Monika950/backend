@@ -180,7 +180,9 @@ export class UserProgressController {
   }
 
   @Get(':huntId/user/:userId')
-  @ApiOperation({ summary: 'Get a participant progress for a treasure hunt (owner only)' })
+  @ApiOperation({
+    summary: 'Get a participant progress for a treasure hunt (owner only)',
+  })
   @ApiParam({ name: 'huntId', description: 'Treasure hunt ID (UUID)' })
   @ApiParam({ name: 'userId', description: 'Participant user ID (UUID)' })
   @ApiOkResponse({

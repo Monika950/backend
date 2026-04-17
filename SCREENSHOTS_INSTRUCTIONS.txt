@@ -1,0 +1,112 @@
+Инструкции за създаване на Screenshots
+========================================
+
+За да завършите задачата, трябва да направите 4 screenshots от GitHub Actions runs.
+
+Стъпки за подготовка:
+--------------------
+
+1. Качете файловете в GitHub repo:
+   - .github/workflows/ci.yml
+   - Всички .spec.ts файлове
+   - pipeline.txt
+   - doc.txt
+
+2. Направете initial commit и push към main branch
+
+
+Screenshot 1: Успешен PR (screenshot1.png)
+------------------------------------------
+
+Цел: Покажете успешно изпълнен CI pipeline
+
+Стъпки:
+1. Създайте нов branch: git checkout -b test-success
+2. Направете малка промяна (напр. добавете коментар в README.md)
+3. Commit и push: git commit -am "Test successful CI" && git push origin test-success
+4. Отворете Pull Request към main branch в GitHub
+5. Изчакайте CI pipeline да завърши успешно (зелени ✓ отметки)
+6. Заснемете екрана показващ:
+   - PR title и description
+   - Зелени checkmarks за lint, build и test
+   - "All checks have passed" съобщение
+
+
+Screenshot 2: Неуспешен PR - Синтактична грешка (screenshot2.png)
+-----------------------------------------------------------------
+
+Цел: Покажете как pipeline се проваля при syntax error
+
+Стъпки:
+1. Създайте нов branch: git checkout -b test-syntax-error
+2. Отворете файл src/main.ts
+3. Добавете синтактична грешка (например: const x = )
+4. Commit и push: git commit -am "Add syntax error" && git push origin test-syntax-error
+5. Отворете Pull Request към main branch
+6. Изчакайте CI pipeline да се провали на build стъпката
+7. Заснемете екрана показващ:
+   - PR с червен X
+   - Failed build job с TypeScript compilation error
+   - Error message в логовете
+
+
+Screenshot 3: Неуспешен PR - Провален Unit Test (screenshot3.png)
+-----------------------------------------------------------------
+
+Цел: Покажете как pipeline се проваля при провален тест
+
+Стъпки:
+1. Създайте нов branch: git checkout -b test-failing-test
+2. Отворете файл src/modules/location/location.service.spec.ts
+3. Променете assertion да е грешен (например: expect(result).toEqual({ id: 'wrong-id' }))
+4. Commit и push: git commit -am "Add failing test" && git push origin test-failing-test
+5. Отворете Pull Request към main branch
+6. Изчакайте CI pipeline да се провали на test стъпката
+7. Заснемете екрана показващ:
+   - PR с червен X
+   - Failed test job
+   - Jest error output показващ кой тест е пропаднал
+
+
+Screenshot 4: Неуспешен PR - Linter грешка (screenshot4.png)
+------------------------------------------------------------
+
+Цел: Покажете как pipeline се проваля при ESLint грешка
+
+Стъпки:
+1. Създайте нов branch: git checkout -b test-lint-error
+2. Отворете файл src/main.ts
+3. Добавете lint грешка (например: var unusedVariable = 123;)
+4. Commit и push: git commit -am "Add lint error" && git push origin test-lint-error
+5. Отворете Pull Request към main branch
+6. Изчакайте CI pipeline да се провали на lint стъпката
+7. Заснемете екрана показващ:
+   - PR с червен X
+   - Failed lint job
+   - ESLint error messages в логовете
+
+
+Допълнителни съвети:
+-------------------
+
+- Уверете се, че screenshots показват ясно GitHub интерфейса
+- Включете timestamp и branch name в screenshot-овете
+- Може да използвате Windows Snipping Tool или Snip & Sketch за screenshots
+- Запазете screenshots в PNG формат с добро качество
+- Именувайте файловете точно както е указано в заданието
+
+
+Финални файлове за предаване:
+----------------------------
+
+В GitHub Classroom repo качете:
+1. .github/workflows/ci.yml
+2. pipeline.txt
+3. doc.txt
+4. screenshot1.png
+5. screenshot2.png
+6. screenshot3.png
+7. screenshot4.png (за linter грешка)
+
+Забележка: В заданието screenshot3.png се повтаря два пъти. Вероятно е грешка и 
+последният трябва да е screenshot4.png за linter грешката.

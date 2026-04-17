@@ -1,0 +1,113 @@
+Repo: https://github.com/Monika950/backend.git
+
+GitHub Actions
+==============
+
+GitHub Actions workflow файлът е конфигуриран в .github/workflows/ci.yml и автоматизира процеса на continuous integration за NestJS backend проекта. Workflow-ът се задейства автоматично при всеки push или pull request към main branch-a.
+
+Структура на workflow-a:
+- Workflow-ът се състои от три последователни job-а: lint, build и test
+- Всеки job използва ubuntu-latest като операционна система
+- Node.js версия 18 е конфигурирана за всички job-ове
+- npm dependencies се кешират за по-бърза изпълнение
+
+При успех:
+- Всички три job-а се изпълняват последователно и приключват успешно
+- В GitHub интерфейса се показва зелена отметка ✓ до commit-a
+- Pull request-ът може да бъде merge-нат в main branch
+- Coverage report се качва като artifact и може да бъде изтеглен
+
+При проблем:
+- Workflow-ът спира на първия неуспешен job
+- В GitHub интерфейса се показва червен X до commit-a
+- Pull request-ът е блокиран и не може да бъде merge-нат
+- В логовете се показва детайлна информация за грешката
+- Може да се види кой точно тест е пропаднал или коя lint грешка е открита
+
+
+Pipeline Tests
+==============
+
+Тестовете са конфигурирани да се изпълняват в третия job на pipeline-a (редове 52-117 в ci.yml).
+
+Стъпки за изпълнение на тестовете:
+1. Checkout на кода (ред 55-56) - използва actions/checkout@v4 за клониране на репото
+2. Setup на Node.js (редове 58-62) - инсталира Node.js 18 с npm cache
+3. Инсталиране на dependencies (редове 64-65) - изпълнява npm ci за чисто инсталиране
+4. Изпълнение на тестовете с coverage (редове 67-103) - стартира npm run test:cov
+
+Environment variables за тестовете (редове 69-103):
+- DATABASE_* променливи за тестова база данни
+- JWT_* секрети за authentication
+- EMAIL_* конфигурация за mail service
+- S3_* и AWS_* настройки за uploads service
+- FRONTEND_URL и PUBLIC_API_URL за API endpoints
+
+Всички environment variables са hardcoded в workflow файла с тестови стойности, за да не се налага използване на GitHub Secrets за unit тестовете.
+
+Jest конфигурацията (в package.json, редове 99-115) определя:
+- testRegex: ".*\\.spec\\.ts$" - търси всички файлове завършващи на .spec.ts
+- rootDir: "src" - изпълнява тестовете от src директорията
+- transform: използва ts-jest за TypeScript файлове
+- collectCoverageFrom: събира coverage от всички .ts и .js файлове
+- coverageDirectory: "../coverage" - генерира coverage report в coverage/
+
+Coverage threshold проверка (редове 105-112):
+- Извлича coverage процента от coverage-summary.json
+- Проверява дали покритието е над 90%
+- Ако е под 90%, workflow-ът се провалва с exit code 1
+
+Upload на coverage report (редове 114-117):
+- Качва целия coverage/ директория като artifact
+- Artifact-ът е достъпен за 90 дни
+- if: always() гарантира, че report-ът се качва дори при провалени тестове
+
+
+Pipeline Linter
+===============
+
+Linting е първата стъпка в pipeline-a и се изпълнява в отделен job (редове 10-28 в ci.yml).
+
+Linter конфигурация:
+- Използван linter: ESLint с TypeScript поддръжка
+- Конфигурационен файл: eslint.config.mjs (модерен flat config формат)
+
+Стъпки за изпълнение на linter-a:
+1. Checkout на кода (редове 14-15) - клонира репото с actions/checkout@v4
+2. Setup на Node.js (редове 17-21) - инсталира Node.js 18 с npm cache
+3. Инсталиране на dependencies (редове 23-24) - изпълнява npm ci
+4. Изпълнение на ESLint (редове 26-27) - стартира npm run lint
+
+ESLint конфигурация (eslint.config.mjs):
+- Базова конфигурация: @eslint/js recommended (ред 11)
+- TypeScript правила: typescript-eslint recommendedTypeChecked (ред 12)
+- Prettier интеграция: eslint-plugin-prettier/recommended (ред 13)
+- Language options (редове 15-25):
+  * globals: node и jest environments
+  * sourceType: commonjs
+  * parserOptions: projectService за TypeScript type checking
+
+Допълнителни настройки (редове 28-33):
+- @typescript-eslint/no-explicit-any: 'off' - позволява any типа
+- @typescript-eslint/no-floating-promises: 'warn' - предупреждение за неизчакани promises
+- @typescript-eslint/no-unsafe-argument: 'warn' - предупреждение за unsafe аргументи
+- @typescript-eslint/no-unsafe-call: 'off' - изключва проверката за unsafe calls
+
+Игнорирани файлове (ред 9):
+- eslint.config.mjs самият файл е изключен от linting
+
+Команда за изпълнение (package.json, ред 15):
+- npm run lint изпълнява: eslint "{src,apps,libs,test}/**/*.ts" --fix
+- Проверява всички .ts файлове в src, apps, libs и test директориите
+- --fix флагът автоматично поправя форматиране грешки където е възможно
+
+При грешка в linter-a:
+- Job-ът се проваля и workflow-ът спира
+- Build и test job-овете не се изпълняват
+- В логовете се показват всички lint грешки с файл и ред номер
+- Pull request-ът не може да бъде merge-нат
+
+Prettier конфигурация (.prettierrc):
+- singleQuote: true - използва single quotes
+- trailingComma: "all" - добавя trailing comma навсякъде
+- endOfLine: "lf" - използва LF line endings (Unix style)

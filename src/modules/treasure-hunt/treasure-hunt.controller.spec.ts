@@ -61,13 +61,15 @@ describe('TreasureHuntController', () => {
   it('removeParticipant delegates to service.removeParticipant', async () => {
     service.removeParticipant.mockResolvedValue({ message: 'removed' } as any);
 
-    const result = await controller.removeParticipant(
-      'h1',
-      'u2',
-      { user: { id: 'owner1' } } as any,
-    );
+    const result = await controller.removeParticipant('h1', 'u2', {
+      user: { id: 'owner1' },
+    } as any);
 
-    expect(service.removeParticipant).toHaveBeenCalledWith('h1', 'owner1', 'u2');
+    expect(service.removeParticipant).toHaveBeenCalledWith(
+      'h1',
+      'owner1',
+      'u2',
+    );
     expect(result).toEqual({ message: 'removed' });
   });
 });

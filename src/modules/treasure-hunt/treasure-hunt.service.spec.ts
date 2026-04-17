@@ -4,11 +4,15 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { TreasureHunt } from './entities/treasure-hunt.entity';
 import { TreasureHuntUser } from './entities/treasure-hunt-user.entity';
 import { User } from '../user/entities/user.entity';
-import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 
 describe('TreasureHuntService', () => {
   let service: TreasureHuntService;
-  
+
   const mockHuntRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -17,7 +21,7 @@ describe('TreasureHuntService', () => {
     update: jest.fn(),
     delete: jest.fn(),
   };
-  
+
   const mockHuntUserRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -25,7 +29,7 @@ describe('TreasureHuntService', () => {
     find: jest.fn(),
     delete: jest.fn(),
   };
-  
+
   const mockUserRepository = {
     findOne: jest.fn(),
   };
@@ -107,7 +111,7 @@ describe('TreasureHuntService', () => {
     it('should throw NotFoundException when hunt not found', async () => {
       mockHuntRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(
+      await expect(service.findOne('nonexistent', 'user-1')).rejects.toThrow(
         NotFoundException,
       );
     });
