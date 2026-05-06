@@ -13,10 +13,14 @@ describe('NotificationsService', () => {
     findOne: jest.fn(),
     find: jest.fn(),
     count: jest.fn(),
+    findAndCount: jest.fn(),
   };
 
   const mockNotificationsGateway = {
     emitToUser: jest.fn(),
+    emitNew: jest.fn(),
+    emitRead: jest.fn(),
+    emitReadBatch: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -124,8 +128,10 @@ describe('NotificationsService', () => {
         },
       ];
 
-      mockNotificationRepository.find.mockResolvedValue(mockNotifications);
-      mockNotificationRepository.count.mockResolvedValue(2);
+      mockNotificationRepository.findAndCount.mockResolvedValue([
+        mockNotifications,
+        2,
+      ]);
 
       const result = await service.list(userId, { page: 1, limit: 10 });
 
@@ -145,12 +151,14 @@ describe('NotificationsService', () => {
         },
       ];
 
-      mockNotificationRepository.find.mockResolvedValue(mockNotifications);
-      mockNotificationRepository.count.mockResolvedValue(1);
+      mockNotificationRepository.findAndCount.mockResolvedValue([
+        mockNotifications,
+        1,
+      ]);
 
       await service.list(userId, { page: 1, limit: 10, read: true });
 
-      expect(mockNotificationRepository.find).toHaveBeenCalledWith(
+      expect(mockNotificationRepository.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             userId,

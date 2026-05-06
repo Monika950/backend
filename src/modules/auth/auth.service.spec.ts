@@ -17,6 +17,7 @@ describe('AuthService', () => {
     updateRefreshToken: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
+    updatePassword: jest.fn(),
   };
 
   const mockJwtService = {

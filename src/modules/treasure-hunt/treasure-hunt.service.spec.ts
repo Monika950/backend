@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { TreasureHunt } from './entities/treasure-hunt.entity';
 import { TreasureHuntUser } from './entities/treasure-hunt-user.entity';
 import { User } from '../user/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   NotFoundException,
   ForbiddenException,
@@ -35,6 +36,10 @@ describe('TreasureHuntService', () => {
     findOneBy: jest.fn(),
   };
 
+  const mockNotificationsService = {
+    create: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -50,6 +55,10 @@ describe('TreasureHuntService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
         },
       ],
     }).compile();
