@@ -61,10 +61,14 @@ describe('NotificationsService', () => {
       mockNotificationRepository.create.mockReturnValue(mockNotification);
       mockNotificationRepository.save.mockResolvedValue(mockNotification);
 
-      const result = await service.create(createDto);
+      const result = await service.create(
+        createDto.userId,
+        createDto.type,
+        createDto.payload,
+        createDto.huntId,
+      );
 
       expect(result).toEqual(mockNotification);
-      expect(mockNotificationRepository.create).toHaveBeenCalledWith(createDto);
       expect(mockNotificationRepository.save).toHaveBeenCalled();
       expect(mockNotificationsGateway.emitToUser).toHaveBeenCalledWith(
         createDto.userId,
@@ -91,7 +95,11 @@ describe('NotificationsService', () => {
       mockNotificationRepository.create.mockReturnValue(mockNotification);
       mockNotificationRepository.save.mockResolvedValue(mockNotification);
 
-      const result = await service.create(createDto);
+      const result = await service.create(
+        createDto.userId,
+        createDto.type,
+        createDto.payload,
+      );
 
       expect(result).toEqual(mockNotification);
       expect(result.huntId).toBeNull();

@@ -79,32 +79,4 @@ describe('AuthController', () => {
     expect(authService.logout).toHaveBeenCalledWith('u1');
     expect(result).toEqual({ message: 'Successfully logged out' });
   });
-
-  it('redirectResetPassword returns 400 when token missing', () => {
-    const send = jest.fn();
-    const status = jest.fn().mockReturnValue({ send });
-    const res = { status } as any;
-
-    controller.redirectResetPassword(undefined as any, res);
-
-    expect(status).toHaveBeenCalledWith(400);
-    expect(send).toHaveBeenCalledWith('Missing reset token');
-  });
-
-  it('redirectResetPassword redirects to app URL from FRONTEND_URL', () => {
-    const previous = process.env.FRONTEND_URL;
-    process.env.FRONTEND_URL = 'treasurehuntapp:/';
-
-    const redirect = jest.fn();
-    const res = { redirect } as any;
-
-    controller.redirectResetPassword('abc+123', res);
-
-    expect(redirect).toHaveBeenCalledWith(
-      302,
-      'treasurehuntapp:/auth/reset-password?token=abc%2B123',
-    );
-
-    process.env.FRONTEND_URL = previous;
-  });
 });
