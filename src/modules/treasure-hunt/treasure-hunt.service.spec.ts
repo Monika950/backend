@@ -18,6 +18,7 @@ describe('TreasureHuntService', () => {
     create: jest.fn(),
     save: jest.fn(),
     findOne: jest.fn(),
+    findOneBy: jest.fn(),
     find: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -139,12 +140,11 @@ describe('TreasureHuntService', () => {
         name: 'Test Hunt',
       };
 
-      mockHuntRepository.findOne.mockResolvedValue(mockHunt);
+      mockUserRepository.findOneBy.mockResolvedValue({ id: userId });
+      mockHuntRepository.findOneBy.mockResolvedValue(mockHunt);
       mockHuntUserRepository.findOne.mockResolvedValue(null);
       mockHuntUserRepository.create.mockReturnValue({});
       mockHuntUserRepository.save.mockResolvedValue({});
-
-      mockUserRepository.findOneBy.mockResolvedValue({ id: userId });
 
       const result = await service.joinByCode(userId, joinCode);
 
@@ -153,9 +153,8 @@ describe('TreasureHuntService', () => {
     });
 
     it('should throw NotFoundException with invalid code', async () => {
-      mockHuntRepository.findOne.mockResolvedValue(null);
-
       mockUserRepository.findOneBy.mockResolvedValue({ id: 'user-1' });
+      mockHuntRepository.findOneBy.mockResolvedValue(null);
 
       await expect(service.joinByCode('user-1', 'invalid')).rejects.toThrow(
         NotFoundException,
@@ -169,7 +168,7 @@ describe('TreasureHuntService', () => {
       };
 
       mockUserRepository.findOneBy.mockResolvedValue({ id: 'user-1' });
-      mockHuntRepository.findOne.mockResolvedValue(mockHunt);
+      mockHuntRepository.findOneBy.mockResolvedValue(mockHunt);
       mockHuntUserRepository.findOne.mockResolvedValue({ id: 'existing' });
 
       await expect(service.joinByCode('user-1', '123456')).rejects.toThrow(
@@ -195,7 +194,7 @@ describe('TreasureHuntService', () => {
         role: 'owner',
       });
       mockHuntRepository.update.mockResolvedValue({ affected: 1 } as any);
-      mockHuntRepository.findOne.mockResolvedValue({
+      mockHuntRepository.findOneBy.mockResolvedValue({
         ...mockHunt,
         ...updateDto,
       });
@@ -206,7 +205,7 @@ describe('TreasureHuntService', () => {
     });
 
     it('should throw ForbiddenException if not owner', async () => {
-      mockHuntUserRepository.findOne.mockResolvedValue({
+      mockHuntUserRepository.findOne.mockResolvedValueOnce({
         role: 'participant',
       });
 
@@ -232,7 +231,7 @@ describe('TreasureHuntService', () => {
     });
 
     it('should throw ForbiddenException if not owner', async () => {
-      mockHuntUserRepository.findOne.mockResolvedValue({
+      mockHuntUserRepository.findOne.mockResolvedValueOnce({
         role: 'participant',
       });
 
@@ -254,7 +253,7 @@ describe('TreasureHuntService', () => {
     });
 
     it('should throw ForbiddenException when user is not owner', async () => {
-      mockHuntUserRepository.findOne.mockResolvedValue({
+      mockHuntUserRepository.findOne.mockResolvedValueOnce({
         role: 'participant',
       });
 

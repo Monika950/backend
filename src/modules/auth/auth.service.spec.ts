@@ -199,8 +199,7 @@ describe('AuthService', () => {
 
       mockUserService.findOne.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedNewPassword');
-      mockUserService.update.mockResolvedValue(undefined);
+      mockUserService.updatePassword.mockResolvedValue(undefined);
 
       await service.changePassword(userId, changePasswordDto);
 
@@ -208,11 +207,10 @@ describe('AuthService', () => {
         changePasswordDto.oldPassword,
         user.password,
       );
-      expect(bcrypt.hash).toHaveBeenCalledWith(
+      expect(mockUserService.updatePassword).toHaveBeenCalledWith(
+        userId,
         changePasswordDto.newPassword,
-        10,
       );
-      expect(mockUserService.update).toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException with wrong old password', async () => {

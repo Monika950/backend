@@ -74,11 +74,7 @@ describe('NotificationsService', () => {
 
       expect(result).toEqual(mockNotification);
       expect(mockNotificationRepository.save).toHaveBeenCalled();
-      expect(mockNotificationsGateway.emitToUser).toHaveBeenCalledWith(
-        createDto.userId,
-        'notifications:new',
-        mockNotification,
-      );
+      expect(mockNotificationsGateway.emitNew).toHaveBeenCalled();
     });
 
     it('should create notification without huntId', async () => {
@@ -216,7 +212,7 @@ describe('NotificationsService', () => {
 
       expect(result).toBe(2);
       expect(mockNotificationRepository.save).toHaveBeenCalled();
-      expect(mockNotificationsGateway.emitToUser).toHaveBeenCalled();
+      expect(mockNotificationsGateway.emitReadBatch).toHaveBeenCalled();
     });
 
     it('should return 0 if no notifications to update', async () => {
