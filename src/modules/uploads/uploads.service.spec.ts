@@ -5,7 +5,7 @@ import { BadRequestException } from '@nestjs/common';
 
 describe('UploadsService', () => {
   let service: UploadsService;
-
+  
   const mockConfigService = {
     get: jest.fn((key: string) => {
       const config: Record<string, string> = {

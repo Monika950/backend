@@ -220,7 +220,11 @@ export class TreasureHuntController {
     @Body() dto: AddOwnerDto,
     @Req() req: AuthedRequest,
   ) {
-    return this.treasureHuntService.addOwner(id, req.user.id, dto.newOwnerId);
+    return this.treasureHuntService.addOwner(
+      id,
+      req.user.id,
+      dto.newOwnerId,
+    );
   }
 
   @Get(':id/participants')

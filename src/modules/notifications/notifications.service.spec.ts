@@ -6,7 +6,7 @@ import { NotificationsGateway } from './notifications.gateway';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
-
+  
   const mockNotificationRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -15,7 +15,7 @@ describe('NotificationsService', () => {
     count: jest.fn(),
     findAndCount: jest.fn(),
   };
-
+  
   const mockNotificationsGateway = {
     emitToUser: jest.fn(),
     emitNew: jest.fn(),
@@ -106,7 +106,7 @@ describe('NotificationsService', () => {
     });
   });
 
-  describe('list', () => {
+  describe('findAll', () => {
     it('should return paginated notifications', async () => {
       const userId = 'user-1';
       const mockNotifications = [
@@ -129,7 +129,7 @@ describe('NotificationsService', () => {
         2,
       ]);
 
-      const result = await service.list(userId, { page: 1, limit: 10 });
+      const result = await service.findAll(userId, { page: 1, limit: 10 });
 
       expect(result.data).toEqual(mockNotifications);
       expect(result.total).toBe(2);
@@ -152,7 +152,7 @@ describe('NotificationsService', () => {
         1,
       ]);
 
-      await service.list(userId, { page: 1, limit: 10, read: true });
+      await service.findAll(userId, { page: 1, limit: 10, read: true });
 
       expect(mockNotificationRepository.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -165,7 +165,7 @@ describe('NotificationsService', () => {
     });
   });
 
-  describe('markRead', () => {
+  describe('markAsRead', () => {
     it('should mark notification as read', async () => {
       const notificationId = 'notif-1';
       const userId = 'user-1';
@@ -182,16 +182,23 @@ describe('NotificationsService', () => {
         readAt: new Date(),
       });
 
-      const result = await service.markRead(userId, notificationId);
+      const result = await service.markAsRead(notificationId, userId);
 
       expect(result.readAt).toBeDefined();
       expect(mockNotificationRepository.save).toHaveBeenCalled();
+      expect(mockNotificationsGateway.emitToUser).toHaveBeenCalledWith(
+        userId,
+        'notifications:read',
+        expect.any(Object),
+      );
     });
 
     it('should throw NotFoundException if notification not found', async () => {
       mockNotificationRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.markRead('user-1', 'nonexistent')).rejects.toThrow();
+      await expect(
+        service.markAsRead('nonexistent', 'user-1'),
+      ).rejects.toThrow();
     });
   });
 

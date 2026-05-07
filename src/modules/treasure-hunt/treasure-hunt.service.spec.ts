@@ -13,7 +13,7 @@ import {
 
 describe('TreasureHuntService', () => {
   let service: TreasureHuntService;
-
+  
   const mockHuntRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -23,7 +23,7 @@ describe('TreasureHuntService', () => {
     update: jest.fn(),
     delete: jest.fn(),
   };
-
+  
   const mockHuntUserRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -31,7 +31,7 @@ describe('TreasureHuntService', () => {
     find: jest.fn(),
     delete: jest.fn(),
   };
-
+  
   const mockUserRepository = {
     findOne: jest.fn(),
     findOneBy: jest.fn(),

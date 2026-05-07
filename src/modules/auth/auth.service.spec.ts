@@ -19,7 +19,7 @@ describe('AuthService', () => {
     update: jest.fn(),
     updatePassword: jest.fn(),
   };
-
+  
   const mockJwtService = {
     signAsync: jest.fn(),
     verify: jest.fn(),
@@ -49,6 +49,7 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    jwtService = module.get<JwtService>(JwtService);
     jest.clearAllMocks();
   });
 
