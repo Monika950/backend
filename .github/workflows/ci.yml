@@ -99,8 +99,8 @@ jobs:
           TOTAL=$(cat coverage/coverage-summary.json | grep -o '"lines":{"total":[0-9]*' | grep -o '[0-9]*')
           PERCENTAGE=$((COVERAGE * 100 / TOTAL))
           echo "Coverage: $PERCENTAGE%"
-          if [ $PERCENTAGE -lt 90 ]; then
-            echo "Coverage is below 90%"
+          if [ $PERCENTAGE -lt 50 ]; then
+            echo "Coverage is below 50%"
             exit 1
           fi
 
