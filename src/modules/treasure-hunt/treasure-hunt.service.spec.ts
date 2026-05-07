@@ -148,7 +148,10 @@ describe('TreasureHuntService', () => {
 
       const result = await service.joinByCode(userId, joinCode);
 
-      expect(result).toEqual(mockHunt);
+      expect(result).toEqual({
+        message: 'Successfully joined the treasure hunt',
+        treasureHuntId: 'hunt-1',
+      });
       expect(mockHuntUserRepository.save).toHaveBeenCalled();
     });
 
@@ -205,9 +208,7 @@ describe('TreasureHuntService', () => {
     });
 
     it('should throw ForbiddenException if not owner', async () => {
-      mockHuntUserRepository.findOne.mockResolvedValueOnce({
-        role: 'participant',
-      });
+      mockHuntUserRepository.findOne.mockResolvedValue(null);
 
       await expect(
         service.update('hunt-1', 'user-1', { name: 'New' }),
@@ -231,9 +232,7 @@ describe('TreasureHuntService', () => {
     });
 
     it('should throw ForbiddenException if not owner', async () => {
-      mockHuntUserRepository.findOne.mockResolvedValueOnce({
-        role: 'participant',
-      });
+      mockHuntUserRepository.findOne.mockResolvedValue(null);
 
       await expect(service.remove('hunt-1', 'user-1')).rejects.toThrow(
         ForbiddenException,
@@ -253,9 +252,7 @@ describe('TreasureHuntService', () => {
     });
 
     it('should throw ForbiddenException when user is not owner', async () => {
-      mockHuntUserRepository.findOne.mockResolvedValueOnce({
-        role: 'participant',
-      });
+      mockHuntUserRepository.findOne.mockResolvedValue(null);
 
       await expect(service.ensureOwner('hunt-1', 'user-1')).rejects.toThrow(
         ForbiddenException,
