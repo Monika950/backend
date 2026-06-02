@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { describe, beforeEach, it } from 'node:test';
 
 describe('TreasureHuntService', () => {
   let service: TreasureHuntService;

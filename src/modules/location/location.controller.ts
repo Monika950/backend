@@ -26,12 +26,14 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { Request } from 'express';
 import { ApiResponseDto } from '../../common/dto/api-response.dto';
+import { LocationDto } from './dto/location.dto';
+import { ParticipantLocationDto } from './dto/participant-location.dto';
 type AuthedRequest = Request & { user: { id: string } };
 
 @UseGuards(AuthGuard)
 @ApiTags('Locations')
 @ApiBearerAuth()
-@ApiExtraModels(ApiResponseDto)
+@ApiExtraModels(ApiResponseDto, LocationDto, ParticipantLocationDto)
 @Controller('location')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
@@ -54,18 +56,32 @@ export class LocationController {
   }
 
   @Get('/hunt/:treasureHuntId')
-  @ApiOperation({ summary: 'List locations for a treasure hunt' })
+  @ApiOperation({
+    summary: 'List locations for a treasure hunt',
+    description:
+      'Returns full location data (including correct answers) for treasure hunt owners, and filtered data (without correct answers) for participants',
+  })
   @ApiParam({
     name: 'treasureHuntId',
     description: 'Treasure hunt ID (UUID)',
   })
   @ApiOkResponse({
+    description:
+      'Array of locations. Owners receive LocationDto (with correctAnswer), participants receive ParticipantLocationDto (without correctAnswer)',
     schema: {
       allOf: [
         { $ref: getSchemaPath(ApiResponseDto) },
         {
           properties: {
-            data: { type: 'array', items: { type: 'object' } },
+            data: {
+              type: 'array',
+              items: {
+                oneOf: [
+                  { $ref: getSchemaPath(LocationDto) },
+                  { $ref: getSchemaPath(ParticipantLocationDto) },
+                ],
+              },
+            },
           },
         },
       ],
@@ -79,13 +95,28 @@ export class LocationController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get location by id' })
+  @ApiOperation({
+    summary: 'Get location by id',
+    description:
+      'Returns full location data (including correct answer) for treasure hunt owners, and filtered data (without correct answer) for participants',
+  })
   @ApiParam({ name: 'id', description: 'Location ID (UUID)' })
   @ApiOkResponse({
+    description:
+      'Location data. Owners receive LocationDto (with correctAnswer), participants receive ParticipantLocationDto (without correctAnswer)',
     schema: {
       allOf: [
         { $ref: getSchemaPath(ApiResponseDto) },
-        { properties: { data: { type: 'object' } } },
+        {
+          properties: {
+            data: {
+              oneOf: [
+                { $ref: getSchemaPath(LocationDto) },
+                { $ref: getSchemaPath(ParticipantLocationDto) },
+              ],
+            },
+          },
+        },
       ],
     },
   })

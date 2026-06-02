@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -23,16 +24,45 @@ export class UserService {
   }
 
   async findAll() {
-    const users = await this.usersRepository.find();
+    const users = await this.usersRepository.find({
+      select: [
+        'id',
+        'email',
+        'username',
+        'firstName',
+        'lastName',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
     return users;
   }
 
-  async findOne(id: string) {
-    return await this.usersRepository.findOne({
-      where: {
-        id,
-      },
+  async findOne(id: string, requestingUserId?: string) {
+    if (requestingUserId && requestingUserId !== id) {
+      throw new ForbiddenException(
+        'You do not have permission to access this user',
+      );
+    }
+
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      select: [
+        'id',
+        'email',
+        'username',
+        'firstName',
+        'lastName',
+        'createdAt',
+        'updatedAt',
+      ],
     });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return user;
   }
 
   async findOneOrFail(id: string) {
@@ -74,7 +104,17 @@ export class UserService {
     }
     return user;
   }
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    requestingUserId: string,
+  ) {
+    if (requestingUserId !== id) {
+      throw new ForbiddenException(
+        'You do not have permission to update this user',
+      );
+    }
+
     if (updateUserDto.username) {
       const userWithSameUsername = await this.findOneByUsername(
         updateUserDto.username,
@@ -83,14 +123,20 @@ export class UserService {
         throw new ConflictException('Username already exists');
       }
     }
-    const user = await this.findOne(id);
+
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
     user.firstName = updateUserDto.firstName;
     user.lastName = updateUserDto.lastName;
     user.username = updateUserDto.username;
-    //user.password = updateUserDto.password;
 
     await this.usersRepository.save(user);
-    return user;
+
+    const { password, refreshToken, ...safeUser } = user;
+    return safeUser;
   }
 
   async updatePassword(id: string, newPassword: string): Promise<void> {
@@ -114,7 +160,19 @@ export class UserService {
     await this.usersRepository.update(id, { refreshToken: null });
   }
 
-  async remove(id: string) {
+  async remove(id: string, requestingUserId: string) {
+    if (requestingUserId !== id) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this user',
+      );
+    }
+
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
     await this.usersRepository.delete(id);
+    return { message: 'User deleted successfully' };
   }
 }

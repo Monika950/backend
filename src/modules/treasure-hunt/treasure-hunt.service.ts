@@ -165,7 +165,7 @@ export class TreasureHuntService {
     });
 
     if (!relation) throw new NotFoundException('User not part of this hunt');
-    relation.role = role as TreasureHuntUserRole; //dto
+    relation.role = role as TreasureHuntUserRole;
     return this.huntUserRepo.save(relation);
   }
 
@@ -222,5 +222,16 @@ export class TreasureHuntService {
     });
     if (!relation)
       throw new ForbiddenException('You are not part of this treasure hunt');
+  }
+
+  async isOwner(huntId: string, userId: string): Promise<boolean> {
+    const relation = await this.huntUserRepo.findOne({
+      where: {
+        treasureHunt: { id: huntId },
+        user: { id: userId },
+        role: TreasureHuntUserRole.OWNER,
+      },
+    });
+    return !!relation;
   }
 }

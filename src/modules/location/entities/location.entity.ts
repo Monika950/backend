@@ -47,7 +47,6 @@ export class Location {
 
   @Column({ type: 'text', nullable: true })
   @IsString()
-  //   @IsNotEmpty()
   hint: string | null;
 
   @Column({ type: 'text' })
@@ -57,7 +56,6 @@ export class Location {
 
   @Column({ nullable: true })
   @IsString()
-  //   @IsNotEmpty()
   @IsUrl()
   image: string | null;
 

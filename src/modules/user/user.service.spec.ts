@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { ConflictException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
@@ -11,6 +15,7 @@ describe('UserService', () => {
     save: jest.fn(),
     find: jest.fn(),
     findOne: jest.fn(),
+    findOneBy: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
   };
@@ -40,7 +45,79 @@ describe('UserService', () => {
   it('update throws if username exists for another user', async () => {
     repo.findOne.mockResolvedValueOnce({ id: 'u2' });
     await expect(
-      service.update('u1', { username: 'taken' } as any),
+      service.update('u1', { username: 'taken' } as any, 'u1'),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('update throws ForbiddenException if user tries to update another user', async () => {
+    await expect(
+      service.update('u1', { username: 'newname' } as any, 'u2'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('findOne throws ForbiddenException when accessing another user', async () => {
+    await expect(service.findOne('u1', 'u2')).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('findOne returns user when accessing own profile', async () => {
+    const user = {
+      id: 'u1',
+      email: 'test@example.com',
+      username: 'testuser',
+      firstName: 'Test',
+      lastName: 'User',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    repo.findOne.mockResolvedValue(user);
+
+    const result = await service.findOne('u1', 'u1');
+    expect(result).toEqual(user);
+  });
+
+  it('findAll returns users without sensitive fields', async () => {
+    const users = [
+      {
+        id: 'u1',
+        email: 'test@example.com',
+        username: 'testuser',
+        firstName: 'Test',
+        lastName: 'User',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+    repo.find.mockResolvedValue(users);
+
+    const result = await service.findAll();
+    expect(result).toEqual(users);
+    expect(repo.find).toHaveBeenCalledWith({
+      select: [
+        'id',
+        'email',
+        'username',
+        'firstName',
+        'lastName',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
+  });
+
+  it('remove throws ForbiddenException if user tries to delete another user', async () => {
+    await expect(service.remove('u1', 'u2')).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('remove deletes user successfully when deleting own account', async () => {
+    repo.findOneBy.mockResolvedValue({ id: 'u1' });
+    repo.delete.mockResolvedValue({ affected: 1 });
+
+    const result = await service.remove('u1', 'u1');
+    expect(result).toEqual({ message: 'User deleted successfully' });
+    expect(repo.delete).toHaveBeenCalledWith('u1');
   });
 });

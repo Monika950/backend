@@ -50,6 +50,7 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'List users' })
   @ApiOkResponse({
     schema: {
@@ -66,6 +67,7 @@ export class UserController {
       ],
     },
   })
+  @UseGuards(AuthGuard)
   @Get()
   async findAll() {
     return this.userService.findAll();
@@ -83,7 +85,7 @@ export class UserController {
   })
   @UseGuards(AuthGuard)
   @Get('me')
-  async getProfile(@Req() req: AuthedRequest): Promise<User> {
+  async getProfile(@Req() req: AuthedRequest) {
     const userId = req.user.id;
     return this.userService.findOne(userId);
   }
@@ -100,8 +102,8 @@ export class UserController {
   })
   @UseGuards(AuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  async findOne(@Param('id') id: string, @Req() req: AuthedRequest) {
+    return this.userService.findOne(id, req.user.id);
   }
 
   @ApiBearerAuth()
@@ -118,8 +120,12 @@ export class UserController {
   })
   @UseGuards(AuthGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.userService.update(id, updateUserDto, req.user.id);
   }
 
   @ApiBearerAuth()
@@ -142,7 +148,7 @@ export class UserController {
   })
   @UseGuards(AuthGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  async remove(@Param('id') id: string, @Req() req: AuthedRequest) {
+    return this.userService.remove(id, req.user.id);
   }
 }

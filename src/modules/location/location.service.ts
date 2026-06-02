@@ -10,6 +10,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TreasureHunt } from '../treasure-hunt/entities/treasure-hunt.entity';
 import { TreasureHuntService } from '../treasure-hunt/treasure-hunt.service';
+import { ParticipantLocationDto } from './dto/participant-location.dto';
+import { LocationDto } from './dto/location.dto';
 
 @Injectable()
 export class LocationService {
@@ -42,16 +44,34 @@ export class LocationService {
     return this.locationRepo.save(location);
   }
 
-  async findAllForHunt(treasureHuntId: string, userId: string) {
+  async findAllForHunt(
+    treasureHuntId: string,
+    userId: string,
+  ): Promise<LocationDto[] | ParticipantLocationDto[]> {
     await this.treasureHuntService.ensureMember(treasureHuntId, userId);
-    return this.locationRepo.find({
+
+    const locations = await this.locationRepo.find({
       where: { treasureHunt: { id: treasureHuntId } },
       order: { orderIndex: 'ASC' },
     });
+
+    const isOwner =
+      await this.treasureHuntService.isOwner(treasureHuntId, userId);
+
+    if (isOwner) {
+      return locations;
+    }
+
+    return locations.map((location) => {
+      const { correctAnswer, ...participantData } = location;
+      return participantData as ParticipantLocationDto;
+    });
   }
 
-  async findOne(locationId: string, userId: string) {
-    //?
+  async findOne(
+    locationId: string,
+    userId: string,
+  ): Promise<LocationDto | ParticipantLocationDto> {
     const location = await this.locationRepo.findOne({
       where: { id: locationId },
       relations: ['treasureHunt'],
@@ -62,7 +82,18 @@ export class LocationService {
       location.treasureHunt.id,
       userId,
     );
-    return location;
+
+    const isOwner = await this.treasureHuntService.isOwner(
+      location.treasureHunt.id,
+      userId,
+    );
+
+    if (isOwner) {
+      return location;
+    }
+
+    const { correctAnswer, ...participantData } = location;
+    return participantData as ParticipantLocationDto;
   }
 
   async update(locationId: string, dto: UpdateLocationDto, userId: string) {

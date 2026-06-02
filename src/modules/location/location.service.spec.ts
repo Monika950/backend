@@ -17,7 +17,11 @@ describe('LocationService', () => {
     delete: jest.fn(),
   };
   const huntRepo = { findOneBy: jest.fn() };
-  const huntService = { ensureOwner: jest.fn(), ensureMember: jest.fn() };
+  const huntService = {
+    ensureOwner: jest.fn(),
+    ensureMember: jest.fn(),
+    isOwner: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,5 +59,79 @@ describe('LocationService', () => {
     expect(result).toEqual({ id: 'l1' });
     expect(locationRepo.create).toHaveBeenCalled();
     expect(locationRepo.save).toHaveBeenCalled();
+  });
+
+  it('findAllForHunt returns full data for owners', async () => {
+    huntService.ensureMember.mockResolvedValue(undefined);
+    huntService.isOwner.mockResolvedValue(true);
+    const locations = [
+      {
+        id: 'l1',
+        name: 'Location 1',
+        correctAnswer: 'Answer 1',
+        orderIndex: 1,
+      },
+    ];
+    locationRepo.find.mockResolvedValue(locations);
+
+    const result = await service.findAllForHunt('h1', 'u1');
+    expect(result).toEqual(locations);
+    expect(huntService.isOwner).toHaveBeenCalledWith('h1', 'u1');
+  });
+
+  it('findAllForHunt returns filtered data for participants', async () => {
+    huntService.ensureMember.mockResolvedValue(undefined);
+    huntService.isOwner.mockResolvedValue(false);
+    const locations = [
+      {
+        id: 'l1',
+        name: 'Location 1',
+        correctAnswer: 'Answer 1',
+        orderIndex: 1,
+      },
+    ];
+    locationRepo.find.mockResolvedValue(locations);
+
+    const result = await service.findAllForHunt('h1', 'u1');
+    expect(result).toEqual([
+      { id: 'l1', name: 'Location 1', orderIndex: 1 },
+    ]);
+    expect(huntService.isOwner).toHaveBeenCalledWith('h1', 'u1');
+  });
+
+  it('findOne returns full data for owners', async () => {
+    const location = {
+      id: 'l1',
+      name: 'Location 1',
+      correctAnswer: 'Answer 1',
+      treasureHunt: { id: 'h1' },
+    };
+    locationRepo.findOne.mockResolvedValue(location);
+    huntService.ensureMember.mockResolvedValue(undefined);
+    huntService.isOwner.mockResolvedValue(true);
+
+    const result = await service.findOne('l1', 'u1');
+    expect(result).toEqual(location);
+    expect(huntService.isOwner).toHaveBeenCalledWith('h1', 'u1');
+  });
+
+  it('findOne returns filtered data for participants', async () => {
+    const location = {
+      id: 'l1',
+      name: 'Location 1',
+      correctAnswer: 'Answer 1',
+      treasureHunt: { id: 'h1' },
+    };
+    locationRepo.findOne.mockResolvedValue(location);
+    huntService.ensureMember.mockResolvedValue(undefined);
+    huntService.isOwner.mockResolvedValue(false);
+
+    const result = await service.findOne('l1', 'u1');
+    expect(result).toEqual({
+      id: 'l1',
+      name: 'Location 1',
+      treasureHunt: { id: 'h1' },
+    });
+    expect(huntService.isOwner).toHaveBeenCalledWith('h1', 'u1');
   });
 });
