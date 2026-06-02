@@ -65,6 +65,7 @@ export class LocationService {
     }
 
     return locations.map((location) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { correctAnswer: _correctAnswer, ...participantData } = location;
       return participantData as ParticipantLocationDto;
     });
@@ -94,6 +95,7 @@ export class LocationService {
       return location;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { correctAnswer: _correctAnswer, ...participantData } = location;
     return participantData as ParticipantLocationDto;
   }
