@@ -93,9 +93,7 @@ describe('LocationService', () => {
     locationRepo.find.mockResolvedValue(locations);
 
     const result = await service.findAllForHunt('h1', 'u1');
-    expect(result).toEqual([
-      { id: 'l1', name: 'Location 1', orderIndex: 1 },
-    ]);
+    expect(result).toEqual([{ id: 'l1', name: 'Location 1', orderIndex: 1 }]);
     expect(huntService.isOwner).toHaveBeenCalledWith('h1', 'u1');
   });
 

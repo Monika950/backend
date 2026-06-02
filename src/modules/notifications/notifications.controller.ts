@@ -90,7 +90,8 @@ export class NotificationsController {
               ? false
               : undefined
           : undefined,
-      page: typeof q.page === 'string' ? Number(q.page) || undefined : undefined,
+      page:
+        typeof q.page === 'string' ? Number(q.page) || undefined : undefined,
       limit:
         typeof q.limit === 'string' ? Number(q.limit) || undefined : undefined,
     };

@@ -55,8 +55,10 @@ export class LocationService {
       order: { orderIndex: 'ASC' },
     });
 
-    const isOwner =
-      await this.treasureHuntService.isOwner(treasureHuntId, userId);
+    const isOwner = await this.treasureHuntService.isOwner(
+      treasureHuntId,
+      userId,
+    );
 
     if (isOwner) {
       return locations;

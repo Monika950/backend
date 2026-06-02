@@ -23,21 +23,6 @@ export default tseslint.config(
                 tsconfigRootDir: import.meta.dirname,
             },
         },
-        eslint.configs.recommended,
-        ...tseslint.configs.recommendedTypeChecked,
-        eslintPluginPrettierRecommended,
-    {
-        languageOptions: {
-            globals: {
-                ...globals.node,
-                ...globals.jest,
-            },
-            sourceType: 'commonjs',
-            parserOptions: {
-                projectService: true,
-                tsconfigRootDir: import.meta.dirname,
-            },
-        },
     },
     {
         files: ['**/*.spec.ts', '**/*.test.ts'],
@@ -61,5 +46,4 @@ export default tseslint.config(
             '@typescript-eslint/unbound-method': 'warn',
         },
     },
-  },
 );

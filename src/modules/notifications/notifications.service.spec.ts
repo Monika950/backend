@@ -6,7 +6,7 @@ import { NotificationsGateway } from './notifications.gateway';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
-  
+
   const mockNotificationRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -15,7 +15,7 @@ describe('NotificationsService', () => {
     count: jest.fn(),
     findAndCount: jest.fn(),
   };
-  
+
   const mockNotificationsGateway = {
     emitToUser: jest.fn(),
     emitNew: jest.fn(),

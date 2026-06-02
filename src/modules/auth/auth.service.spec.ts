@@ -19,7 +19,7 @@ describe('AuthService', () => {
     update: jest.fn(),
     updatePassword: jest.fn(),
   };
-  
+
   const mockJwtService = {
     signAsync: jest.fn(),
     verify: jest.fn(),
@@ -107,7 +107,9 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
-      expect(mockUserService.findOneByEmail).toHaveBeenCalledWith(loginDto.email);
+      expect(mockUserService.findOneByEmail).toHaveBeenCalledWith(
+        loginDto.email,
+      );
     });
 
     it('should throw UnauthorizedException with invalid credentials', async () => {

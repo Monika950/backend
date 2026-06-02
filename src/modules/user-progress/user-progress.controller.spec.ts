@@ -44,7 +44,9 @@ describe('UserProgressController', () => {
   });
 
   it('getParticipantProgress delegates to service.getParticipantProgressForHunt', async () => {
-    service.getParticipantProgressForHunt.mockResolvedValue({ id: 'p2' } as any);
+    service.getParticipantProgressForHunt.mockResolvedValue({
+      id: 'p2',
+    } as any);
 
     const result = await controller.getParticipantProgress(
       { user: { id: 'owner1' } } as any,
