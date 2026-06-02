@@ -65,7 +65,7 @@ export class LocationService {
     }
 
     return locations.map((location) => {
-      const { correctAnswer, ...participantData } = location;
+      const { correctAnswer: _correctAnswer, ...participantData } = location;
       return participantData as ParticipantLocationDto;
     });
   }
@@ -94,7 +94,7 @@ export class LocationService {
       return location;
     }
 
-    const { correctAnswer, ...participantData } = location;
+    const { correctAnswer: _correctAnswer, ...participantData } = location;
     return participantData as ParticipantLocationDto;
   }
 
